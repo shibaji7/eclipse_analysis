@@ -273,7 +273,7 @@ def genererate_RTI(
 def generate_fovt(rad, dates):
     fan = Fan(
         [rad], 
-        dates[0] + dt.timedelta(hours=7) + dt.timedelta(minutes=35),
+        dates[0].replace(hour=0,minute=0) + dt.timedelta(hours=7) + dt.timedelta(minutes=35),
         f""
     )
     fan.overlay_fovs(rad, beams=[15, 11, 7, 3, 0])

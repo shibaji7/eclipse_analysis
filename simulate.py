@@ -34,16 +34,16 @@ if __name__ == "__main__":
             args.rad,
             [args.start, args.end],
         )
-        if args.beam == -1: beams = np.arange(24)
-        for bm in beams:
-            genererate_RTI(
-                args.rad, bm,
-                [args.start, args.end],
-                args.file_type,
-                param_list=args.params,
-                channel=2, tfreq=15.5
-            )
-            pass
+        # if args.beam == -1: beams = np.arange(24)
+        # for bm in beams:
+        #     genererate_RTI(
+        #         args.rad, bm,
+        #         [args.start, args.end],
+        #         args.file_type,
+        #         param_list=args.params,
+        #         channel=2, tfreq=15.5
+        #     )
+        #     pass
     elif args.method == "fan":
         genererate_Fan(
             args.rad, [args.start, args.end],
