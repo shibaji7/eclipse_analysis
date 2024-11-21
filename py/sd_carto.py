@@ -483,6 +483,25 @@ class SDCarto(GeoAxes):
                 zorder=zorder,
             )
             self.add_patch(patch)
+        if sbeam+1 == ebeam:
+            xloc, yloc = (
+                np.mean(x[sbeam:ebeam+1, egate+6]), 
+                np.mean(y[sbeam:ebeam+1, egate+6])
+            )
+            self.text(
+                xloc, yloc,
+                sbeam, ha="center", va="center",
+                fontdict=dict(color="r")
+            )
+            self.plot(
+                np.mean(x[sbeam:ebeam+1, sgate:egate], axis=0),
+                np.mean(y[sbeam:ebeam+1, sgate:egate], axis=0),
+                color="r",
+                zorder=zorder,
+                linewidth=lineWidth,
+                ls=ls,
+                alpha=0.6,
+            )
         return
 
     def overlay_data(

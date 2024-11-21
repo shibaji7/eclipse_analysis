@@ -201,6 +201,7 @@ class Analysis(object):
         gflg=None,
         tfreq=None,
         channel=None,
+        change_vel_sign=False,
     ):
         self.filter_summ = ""
         self.df = self.radar.df.copy()
@@ -226,6 +227,8 @@ class Analysis(object):
             lambda row: gsMapSlantRange(row["slist"]), 
             axis = 1
         )
+        if change_vel_sign:
+            self.df["v"] = -1*self.df["v"]
         return
     
 def genererate_RTI(
@@ -241,7 +244,7 @@ def genererate_RTI(
         font="sans-serif",
         rti_panels = len(param_list)
     )
-    anl.filter_dataframe(channel=channel, tfreq=tfreq)
+    anl.filter_dataframe(channel=channel, tfreq=tfreq, change_vel_sign=(tfreq==10.5))
     params = []
     if "v" in param_list:
         params.append(
@@ -276,7 +279,11 @@ def generate_fovt(rad, dates):
         dates[0].replace(hour=0,minute=0) + dt.timedelta(hours=7) + dt.timedelta(minutes=35),
         f""
     )
-    fan.overlay_fovs(rad, beams=[15, 11, 7, 3, 0])
+    fan.overlay_fovs(
+        rad,
+        #beams=[0,3,7,11,15] 
+        beams=[15, 12, 8, 4, 0]
+    )
     fan.save(f"figures/fanbeam.{rad}.png")
     fan.close() 
     return

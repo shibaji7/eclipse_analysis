@@ -41,7 +41,7 @@ if __name__ == "__main__":
         #         [args.start, args.end],
         #         args.file_type,
         #         param_list=args.params,
-        #         channel=2, tfreq=15.5
+        #         channel=2, tfreq=10.5
         #     )
         #     pass
     elif args.method == "fan":
