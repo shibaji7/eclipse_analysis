@@ -23,6 +23,8 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--params", default="v", help="Parameters name", type=str)
     parser.add_argument("-d", "--fan_date", default=dt.datetime(2021,12,4,6), help="Start date", type=dparser.parse)
     parser.add_argument("-fw", "--fan_time_window", default=90, help="Fan run time if invoke Fan", type=int)
+    parser.add_argument("-ch", "--channel", default=1, help="Channels", type=int)
+    parser.add_argument("-t", "--tfreq", default=12., help="Frequency", type=float)
     args = parser.parse_args()
     args.params = args.params.split(",")
     for k in vars(args).keys():
@@ -34,16 +36,16 @@ if __name__ == "__main__":
             args.rad,
             [args.start, args.end],
         )
-        # if args.beam == -1: beams = np.arange(24)
-        # for bm in beams:
-        #     genererate_RTI(
-        #         args.rad, bm,
-        #         [args.start, args.end],
-        #         args.file_type,
-        #         param_list=args.params,
-        #         channel=2, tfreq=10.5
-        #     )
-        #     pass
+        if args.beam == -1: beams = np.arange(24)
+        for bm in beams:
+            genererate_RTI(
+                args.rad, bm,
+                [args.start, args.end],
+                args.file_type,
+                param_list=args.params,
+                channel=args.channel, tfreq=args.tfreq
+            )
+            pass
     elif args.method == "fan":
         genererate_Fan(
             args.rad, [args.start, args.end],
