@@ -10,12 +10,15 @@ from dateutil import parser as dparser
 import eutils as utils
 import numpy as np
 
-from analysis_plot import genererate_RTI, genererate_Fan, generate_fovt
+from analysis_plot import (
+    genererate_RTI, genererate_Fan, 
+    generate_fovt, generate_time_series_plots
+)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--start", default=dt.datetime(2021,12,4,6), help="Start date", type=dparser.parse)
-    parser.add_argument("-e", "--end", default=dt.datetime(2021,12,4,10), help="End date", type=dparser.parse)
+    parser.add_argument("-s", "--start", default=dt.datetime(2021,12,3,2), help="Start date", type=dparser.parse)
+    parser.add_argument("-e", "--end", default=dt.datetime(2021,12,3,14), help="End date", type=dparser.parse)
     parser.add_argument("-r", "--rad", default="fir", help="Radar code", type=str)
     parser.add_argument("-f", "--file_type", default="fitacf", help="File type other than fitacf", type=str)
     parser.add_argument("-b", "--beam", default=15, help="Radar beam", type=int)
@@ -32,10 +35,11 @@ if __name__ == "__main__":
     
     if args.method == "rti":
         beams = [args.beam]
-        generate_fovt(
-            args.rad,
-            [args.start, args.end],
-        )
+        
+        # generate_fovt(
+        #     args.rad,
+        #     [args.start, args.end],
+        # )
         if args.beam == -1: beams = np.arange(24)
         for bm in beams:
             genererate_RTI(
@@ -45,7 +49,10 @@ if __name__ == "__main__":
                 param_list=args.params,
                 channel=args.channel, tfreq=args.tfreq
             )
-            pass
+        # generate_time_series_plots(
+        #     [args.start, args.end], args.rad, args.beam,
+        # )
+        
     elif args.method == "fan":
         genererate_Fan(
             args.rad, [args.start, args.end],

@@ -217,8 +217,9 @@ class Analysis(object):
         self.df["unique_tfreq"] = self.df.tfreq.apply(lambda x: int(x/0.5)*0.5)
         print(f"Unique tfreq: {self.df.unique_tfreq.unique()}")
         if tfreq: 
+            tfx = 12.2 if tfreq == 12. else tfreq
             self.df = self.df[self.df.unique_tfreq==tfreq]
-            self.filter_summ += r"$f_0$=%.1f MHz"%tfreq + "\n"
+            self.filter_summ += r"$f_0$=%.1f MHz"%tfx + "\n"
         if gflg: 
             self.df = self.df[self.df.gflg==gflg]
             self.filter_summ += r"IS/GS$\sim$%d"%gflg
@@ -227,6 +228,8 @@ class Analysis(object):
             lambda row: gsMapSlantRange(row["slist"]), 
             axis = 1
         )
+        print("change_vel_sign>>>, ", change_vel_sign)
+        print(self.df["v"].head())
         if change_vel_sign:
             self.df["v"] = -1*self.df["v"]
         return
@@ -264,7 +267,7 @@ def genererate_RTI(
                 "ylim": srange,
                 "xlim": dates,
                 "title": "", 
-                "p_max": 30, "p_min":3, 
+                "p_max": 45, "p_min":3, 
                 "xlabel": "Time [UT]", "ylabel": "Slant Range [km]",
                 "zparam":"p_l", "label": "Power [dB]",
                 "cmap": "jet", "cbar": True, "gflg":False
@@ -281,7 +284,6 @@ def generate_fovt(rad, dates):
     )
     fan.overlay_fovs(
         rad,
-        #beams=[0,3,7,11,15] 
         beams=[15, 11, 7, 3, 0]
     )
     fan.save(f"figures/fanbeam.{rad}.png")
@@ -303,4 +305,41 @@ def genererate_Fan(
     )
     anl.filter_dataframe(gflg, tfreq, channel)
     anl.generateFan(date, param=param, gflg=False)
+    return
+
+def generate_time_series_plots(
+    dates, rad, beam, type="fitacf",
+    param="v", tfreqs=[12., 10.5, 13.5, 15.5], gflg=False, 
+    channels=[1, 2, 2, 2], srange=[0, 4500],
+):
+    rti = RangeTimePlot(
+        srange, dates, 
+        f"Rad: {rad} / Beam: {beam} / Date: 04 Dec, 2021", 4
+    )
+    i = 0
+    for channel, tfreq, change in zip(channels, tfreqs, [True, False, True, True]):
+        anl = Analysis(
+            rad=rad,
+            beam=beam, 
+            dates=dates,
+            type=type,
+            font="sans-serif",
+        )
+        anl.filter_dataframe(channel=channel, tfreq=tfreq, change_vel_sign=change)
+        ax = rti.addParamPlot(
+            rad,
+            anl.df, 
+            beam, "", 
+            p_max=30, p_min=-30,
+            xlabel="Time [UT]" if i==3 else "", ylabel="Slant Range [km]", 
+            zparam=param, label="Velocity [m/s]",
+            cmap="jet", cbar=i==1, add_gflg=False, eclipse_cbar=i==2,
+        )
+        ax.set_ylim(srange)
+        ax.set_xlim(dates)
+        ax.text(0.99, 0.95, f"({chr(97+i)}) " + anl.filter_summ, va="top",
+                    ha="right", transform=ax.transAxes, fontdict=dict(weight="bold"))
+        i+=1
+    rti.save(f"figures/rti.{rad}-{beam}.png")
+    rti.close()
     return

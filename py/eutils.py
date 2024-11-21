@@ -192,7 +192,7 @@ def get_rti_eclipse(
     return p
 
 def get_eclipse(
-    date, alts=np.array([100]),
+    date, alts=np.array([300]),
     lats=np.linspace(0,90,num=90*2),
     lons=np.linspace(-180,180,num=91*2),
     n_t=1, dtx=60.0,

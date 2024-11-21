@@ -38,14 +38,14 @@ class RangeTimePlot(object):
         self.num_subplots = num_subplots
         self._num_subplots_created = 0
         self.fig = plt.figure(figsize=(8, 3*num_subplots), dpi=dpi) # Size for website
-        plt.suptitle(fig_title, x=0.075, y=0.95, ha="left", fontweight="bold", fontsize=15)
+        self.fig_title = fig_title
         mpl.rcParams.update({"xtick.labelsize": 12, "ytick.labelsize":12, "font.size":12})
         utils.setsize(12)
         return
     
     def addParamPlot(self, rad, df, beam, title, p_max=100, p_min=-100, xlabel="Time UT",
              ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap="jet_r", 
-             cbar=False, omni=None, add_gflg=False):
+             cbar=False, omni=None, add_gflg=False, eclipse_cbar=False):
         ax = self._add_axis()
         logger.info(f"Unique beams: {df.bmnum.unique()}")
         df = df[df.bmnum==beam]
@@ -76,7 +76,7 @@ class RangeTimePlot(object):
             im = ax.pcolormesh(X, Y, Z.T, lw=0.01, edgecolors="None", cmap=cmap,
                         vmax=p_max, vmin=p_min, shading="nearest", zorder=3)
         ax.tick_params(direction="out", which="both")
-        self.overlay_eclipse_shadow(rad, beam, self.unique_times, ax)
+        self.overlay_eclipse_shadow(rad, beam, self.unique_times, ax, eclipse_cbar)
         if omni is None: 
             if cbar: self._add_colorbar(im, ax, cmap, label=label)
             return ax
@@ -85,7 +85,7 @@ class RangeTimePlot(object):
             t_ax = self.overlay_omni(ax, omni)
             return ax, t_ax
             
-    def overlay_eclipse_shadow(self, rad, beam, dates, ax):
+    def overlay_eclipse_shadow(self, rad, beam, dates, ax, eclipse_cbar):
         ddates = [
             dates[0]+dt.timedelta(minutes=i) 
             for i in range(int((dates[1]-dates[0]).total_seconds()/60))
@@ -98,7 +98,7 @@ class RangeTimePlot(object):
         srange = 180 + (45 * np.arange(101))
         obs = np.copy(p)
         obs[obs>1.] = np.nan
-        ax.contourf(
+        im = ax.contourf(
             ddates,
             srange,
             obs.T,
@@ -111,6 +111,8 @@ class RangeTimePlot(object):
             ddates, srange, obs.T, lw=0.01, edgecolors="None", cmap="gray_r",
             vmax=1, vmin=0, shading="nearest", alpha=0.4, zorder=1
         )
+        if eclipse_cbar:
+            self._add_colorbar(im, ax, "Blues", label="Obscuration")
         return
     
     def overlay_omni(self, ax, omni):
@@ -135,6 +137,8 @@ class RangeTimePlot(object):
         self._num_subplots_created += 1
         ax = self.fig.add_subplot(self.num_subplots, 1, self._num_subplots_created)
         ax.tick_params(axis="both", labelsize=12)
+        if self._num_subplots_created == 1:
+            ax.text(0.05, 1.05, self.fig_title, ha="left", va="center", transform=ax.transAxes, fontdict=dict(size=15, weight="bold"))
         return ax
 
     def save(self, filepath):
