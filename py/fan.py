@@ -161,7 +161,7 @@ class Fan(object):
         ax.overlay_radar(rad, font_color=col)
         ax.overlay_fov(rad, lineColor=col)
         if beams and len(beams) > 0:
-            [ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="darkblue",
+            [ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="m",
                 lineWidth=0.3) for b in beams]
         return ax
 

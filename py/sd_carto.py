@@ -391,8 +391,8 @@ class SDCarto(GeoAxes):
         from cartopy.feature.nightshade import Nightshade
         self.add_feature(Nightshade(self.plot_date, alpha=0.2))
         alts = np.array([100])
-        lats = np.linspace(-90, 0, num=45*2)
-        lons = np.linspace(-180, 180, num=91)
+        lats = np.linspace(-90, 0, num=181)
+        lons = np.linspace(-180, 180, num=181)
         p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
         p = np.ma.masked_invalid(p)[0,0,:,:]
         obs = np.copy(p)
