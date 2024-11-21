@@ -395,13 +395,26 @@ class SDCarto(GeoAxes):
         lons = np.linspace(-180, 180, num=91)
         p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
         p = np.ma.masked_invalid(p)[0,0,:,:]
+        obs = np.copy(p)
+        obs[obs>1.] = np.nan
         im = self.contourf(
             lons,
             lats,
-            p,
+            obs,
             transform=cartopy.crs.PlateCarree(),
-            cmap="gray_r", alpha=0.4,
+            cmap="Blues", alpha=0.6,
             levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+        )
+        obs = np.copy(p)
+        obs[obs<=1.] = np.nan
+        self.contourf(
+            lons,
+            lats,
+            obs,
+            transform=cartopy.crs.PlateCarree(), 
+            cmap="gray_r",
+            alpha=0.3,
+            levels=[1.0, 2.0]
         )
         #if cb: _add_colorbar(fig, ax, im)
         utils.setsize(8)

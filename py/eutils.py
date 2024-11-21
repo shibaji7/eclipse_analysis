@@ -175,7 +175,7 @@ class Eclipse(object):
             if s < 1e-3: percent_eclipse=1.0
             else: percent_eclipse=self.intersection(r_moon,r_sun,s,n_s=100)
         if np.degrees(sun.alt) <= r_sun:
-            if np.degrees(sun.alt) <= -r_sun: percent_eclipse=np.nan
+            if np.degrees(sun.alt) <= -r_sun: percent_eclipse=2
             else:
                 percent_eclipse = 1.0-((np.degrees(sun.alt)+r_sun)/(2.0*r_sun))*(1.0-percent_eclipse)
         return percent_eclipse

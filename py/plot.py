@@ -95,25 +95,22 @@ class RangeTimePlot(object):
         fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
         glat, glon = fov[0][:101, beam], fov[1][:101, beam]
         p = utils.get_rti_eclipse(ddates, glat, glon)
-        # folder = f"database/eclipse_path/{date.strftime('%Y-%m-%d')}/"
-        # file = f"{folder}/oc.{rad}.{beam}.csv"
-        # o = pd.read_csv(file, parse_dates=["dates"])
         srange = 180 + (45 * np.arange(101))
-        # tags = [f"gate_{i}" for i in range(101)]
-        # p = o[tags].values
-        index_max, max_val, Tmax = 0, 0, ""
-        for t in range(101):
-            if (max_val < np.nanmax(p[t, :])) and (np.nanmax(p[t,:])<0.9):
-                index_max = np.nanargmax(p[t, :])
-                max_val = np.nanmax(p[t, :])
-                Tmax = t
-        print(np.nanmax(p))
-        # p = np.ma.masked_where(p <= 0.2, p)
-        # p = np.ma.masked_where(p >= 0.9, p)       
-        ax.pcolormesh(ddates, srange, p.T, lw=0.01, edgecolors="None", cmap="gray_r",
-                        vmax=1, vmin=0, shading="nearest", alpha=1, zorder=1)
-        print(index_max)
-        ax.axvline(ddates[index_max], lw=0.8, zorder=2, ls="--", color="darkblue")
+        obs = np.copy(p)
+        obs[obs>1.] = np.nan
+        ax.contourf(
+            ddates,
+            srange,
+            obs.T,
+            cmap="Blues", alpha=0.6,
+            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+        )
+        obs = np.copy(p)
+        obs[obs<=1.] = np.nan
+        ax.pcolormesh(
+            ddates, srange, obs.T, lw=0.01, edgecolors="None", cmap="gray_r",
+            vmax=1, vmin=0, shading="nearest", alpha=0.4, zorder=1
+        )
         return
     
     def overlay_omni(self, ax, omni):

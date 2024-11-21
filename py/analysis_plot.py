@@ -282,7 +282,7 @@ def generate_fovt(rad, dates):
     fan.overlay_fovs(
         rad,
         #beams=[0,3,7,11,15] 
-        beams=[15, 12, 8, 4, 0]
+        beams=[15, 11, 7, 3, 0]
     )
     fan.save(f"figures/fanbeam.{rad}.png")
     fan.close() 
