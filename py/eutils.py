@@ -3,6 +3,8 @@ import ephem
 import numpy as np
 import datetime as dt
 
+import eclipse_calc
+
 def smooth(x,window_len=11,window="hanning"):
     if x.ndim != 1: raise ValueError("smooth only accepts 1 dimension arrays.")
     if x.size < window_len: raise ValueError("Input vector needs to be bigger than window size.")
@@ -127,11 +129,66 @@ def get_gridded_parameters(q, xparam="time", yparam="slist", zparam="v", round=F
     Z = np.ma.masked_where(
             np.isnan(plotParamDF[zparam].values),
             plotParamDF[zparam].values)
+    Z = apply_2d_filter(Z)
     return X,Y,Z
+
+def apply_2d_filter(data, weights=np.array([[1,2,1],[2,5,2],[1,2,1]])):
+    """
+    Apply a 2D filter with a 3x3 weight matrix, rejecting a cell if 
+    at least 4 cells in the 3x3 neighborhood are masked.
+
+    Parameters:
+    - data: 2D numpy masked array
+    - weights: 3x3 numpy array (weight matrix)
+
+    Returns:
+    - filtered_data: 2D numpy masked array with the filter applied
+    """
+    # Ensure the input is a masked array
+    filtered_data = np.ma.empty_like(data)
+
+    rows, cols = data.shape
+    kernel_size = 3
+    offset = kernel_size // 2
+
+    for i in range(rows):
+        for j in range(cols):
+            # Extract the 3x3 neighborhood
+            r_start, r_end = max(0, i - offset), min(rows, i + offset + 1)
+            c_start, c_end = max(0, j - offset), min(cols, j + offset + 1)
+            neighborhood = data[r_start:r_end, c_start:c_end]
+
+            # Check if enough cells are covered
+            if np.ma.count(neighborhood) >= 5:  # At least 5 valid cells
+                valid_weights = weights[:neighborhood.shape[0], :neighborhood.shape[1]]
+                # print(valid_weights)
+                # filtered_value = np.sum(neighborhood * valid_weights) / np.sum(valid_weights)
+                filtered_data[i, j] = weighted_median(neighborhood.ravel(),  valid_weights.ravel())
+            else:
+                # Mask the cell if less than 5 valid cells
+                filtered_data[i, j] = np.ma.masked
+
+    return filtered_data
+
+def weighted_median(data, weights):
+    sorted_indices = np.argsort(data)
+    sorted_data = data[sorted_indices]
+    sorted_weights = weights[sorted_indices]
+    cum_weights = np.cumsum(sorted_weights)
+    median_index = np.searchsorted(cum_weights, 0.5 * cum_weights[-1])
+    # Calculate the weighted median
+    if cum_weights[median_index - 1] == 0.5 * cum_weights[-1]:
+        return 0.5 * (sorted_data[median_index - 1] + sorted_data[median_index])
+    else:
+        return sorted_data[median_index]
 
 class Eclipse(object):
     def __init__(self):
-        return    
+        return   
+
+    def calculate_w2naf_shadow(self, d, lat, lon, alt=300.):
+        obsc  = eclipse_calc.calculate_obscuration(d,lat,lon,alt)
+        return obsc
 
     def intersection(slef, r0, r1, d, n_s=100):
         A1 = np.zeros([n_s, n_s])
@@ -191,6 +248,31 @@ def get_rti_eclipse(
             p[i,j] = e.create_eclipse_shadow(d, lat, lon, alt)
     return p
 
+def get_w2naf_eclipse(
+    date, alts=np.array([300]),
+    lats=np.linspace(0,90,num=90*2),
+    lons=np.linspace(-180,180,num=91*2),
+    n_t=1, dtx=60.0,
+):
+    from tqdm import tqdm
+    n_alts=len(alts)
+    n_lats=len(lats)
+    n_lons=len(lons)
+    e = Eclipse()
+    
+    p=np.zeros([n_t,n_alts,n_lats,n_lons])
+    times=np.arange(n_t)*dtx
+    dts=[]
+    for ti,t in enumerate(times):
+        d = date + dt.timedelta(seconds=t)
+        #print("Time %1.2f (s)"%(t))
+        for ai,alt in enumerate(tqdm(alts)):
+            for lai,lat in enumerate(tqdm(lats)):
+                for loi,lon in enumerate(tqdm(lons)):
+                    p[ti,ai,lai,loi] = e.calculate_w2naf_shadow(d, lat, lon, alt)
+        dts.append(d)
+    return (p,times,dts)
+
 def get_eclipse(
     date, alts=np.array([300]),
     lats=np.linspace(0,90,num=90*2),
@@ -233,3 +315,14 @@ def create_movie(folder, outfile, pat, fps=3):
         out.write(img)
     out.release()
     return
+
+def get_w2naf_rti_eclipse(
+    dates, lats, lons, alt=300
+):
+    from tqdm import tqdm
+    e = Eclipse()
+    p = np.nan * np.zeros((len(dates), len(lats)))
+    for i, d in enumerate(tqdm(dates)):
+        for j, lat, lon in zip(range(len(lats)), lats, lons):
+            p[i,j] = e.calculate_w2naf_shadow(d, lat, lon, alt)
+    return p

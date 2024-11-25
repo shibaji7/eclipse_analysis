@@ -45,10 +45,13 @@ class RangeTimePlot(object):
     
     def addParamPlot(self, rad, df, beam, title, p_max=100, p_min=-100, xlabel="Time UT",
              ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap="jet_r", 
-             cbar=False, omni=None, add_gflg=False, eclipse_cbar=False):
+             cbar=False, omni=None, add_gflg=False, eclipse_cbar=True, remove_srange=500):
         ax = self._add_axis()
         logger.info(f"Unique beams: {df.bmnum.unique()}")
         df = df[df.bmnum==beam]
+        if remove_srange:
+            df = df[df.srange>=remove_srange]
+            df.srange /= 2
         if beam not in df.bmnum.unique():
             logger.error(f"Beam {beam} was not sounded!")
         X, Y, Z = utils.get_gridded_parameters(df, xparam="time", yparam="srange", zparam=zparam)
@@ -97,7 +100,7 @@ class RangeTimePlot(object):
         p = utils.get_rti_eclipse(ddates, glat, glon)
         srange = 180 + (45 * np.arange(101))
         obs = np.copy(p)
-        obs[obs>1.] = np.nan
+        # obs[obs>1.] = np.nan
         im = ax.contourf(
             ddates,
             srange,
@@ -112,7 +115,7 @@ class RangeTimePlot(object):
             vmax=1, vmin=0, shading="nearest", alpha=0.4, zorder=1
         )
         if eclipse_cbar:
-            self._add_colorbar(im, ax, "Blues", label="Obscuration")
+            self._add_colorbar(im, ax, "Blues", label="Obscuration", dx=0.15)
         return
     
     def overlay_omni(self, ax, omni):

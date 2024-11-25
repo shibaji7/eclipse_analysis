@@ -416,7 +416,7 @@ class SDCarto(GeoAxes):
             alpha=0.3,
             levels=[1.0, 2.0]
         )
-        #if cb: _add_colorbar(fig, ax, im)
+        # if cb: _add_colorbar(fig, ax, im)
         utils.setsize(8)
         fig = self.get_figure()
         cpos = [1.25, 0.1, 0.025, 0.6]
@@ -552,6 +552,7 @@ class SDCarto(GeoAxes):
             lons, lats = lons[Xb.ravel(), Yg.ravel()].reshape(Xb.shape), lats[
                 Xb.ravel(), Yg.ravel()
             ].reshape(Xb.shape)
+            lons, lats = ((lons+hdw.geographic.lon)/2, (lats+hdw.geographic.lat)/2)
             XYZ = tx.transform_points(fm, lons, lats)
             Px = np.ma.masked_invalid(Px)
             # im = self.scatter(

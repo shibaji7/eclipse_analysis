@@ -72,8 +72,8 @@ class Fan(object):
         """
         from sd_carto import SDCarto
         self._num_subplots_created += 1
-        proj = cartopy.crs.SouthPolarStereo(central_longitude=120.0)
-        # proj = cartopy.crs.Stereographic(central_longitude=-90.0, central_latitude=-45.0)
+        # proj = cartopy.crs.SouthPolarStereo(central_longitude=120.0)
+        proj = cartopy.crs.Stereographic(central_longitude=120.0, central_latitude=-45.0)
         # proj = cartopy.crs.PlateCarree(central_longitude=-90.0)
         ax = self.fig.add_subplot(
             100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
@@ -83,7 +83,7 @@ class Fan(object):
             plot_date=self.date,
         )
         ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
-        ax.set_extent([-180, 180, -50, -90], crs=cartopy.crs.PlateCarree())
+        ax.set_extent([-150, 130, -70, -50], crs=cartopy.crs.PlateCarree())
         plt_lons = np.arange(-180, 181, 15)
         mark_lons = np.arange(-180, 181, 30)
         plt_lats = np.arange(-90, -40, 10)

@@ -178,14 +178,14 @@ class Analysis(object):
         p_max, p_min = (30, -30) if param == "v" else (33, 0)
         cmap = "Spectral" if param == "v" else "plasma"
         label = "Velocity [m/s]" if param == "v" else "Power [dB]"
-        fig_title = rf"$f_0=${self.get_unique_freq()} MHz" 
+        # title = fr"Rad: {self.rad} / $f_0=${self.get_unique_freq()} MHz"
         frame = self.df[
             (self.df.time >= date)
             & (self.df.time < date + dt.timedelta(minutes=1))
         ]
         self.fan = Fan(
             [self.rad], date,
-            fig_title
+            #self.filter_summ
         )
         self.fan.generate_fov(
             self.rad, frame, p_name=param,
@@ -228,14 +228,13 @@ class Analysis(object):
             lambda row: gsMapSlantRange(row["slist"]), 
             axis = 1
         )
-        print("change_vel_sign>>>, ", change_vel_sign)
-        print(self.df["v"].head())
         if change_vel_sign:
             self.df["v"] = -1*self.df["v"]
+        print("filter_summ>>>>>>>>>>",self.filter_summ)
         return
     
 def genererate_RTI(
-        rad, beam, dates, type, srange=[0, 4500],
+        rad, beam, dates, type, srange=[0, 2500],
         param_list=["v", "p_l"], gflg=False,
         tfreq=None, channel=None
 ):
@@ -256,7 +255,7 @@ def genererate_RTI(
                 "title": "", 
                 "xlim": dates,
                 "p_max": 30, "p_min":-30, 
-                "xlabel": "", "ylabel": "Slant Range [km]",
+                "xlabel": "", "ylabel": "Slant Range \n mapped to 1-hop reflection point [km]",
                 "zparam":"v", "label": "Velocity [m/s]",
                 "cmap": "jet_r", "cbar": True, "gflg":gflg
             }
@@ -310,7 +309,7 @@ def genererate_Fan(
 def generate_time_series_plots(
     dates, rad, beam, type="fitacf",
     param="v", tfreqs=[12., 10.5, 13.5, 15.5], gflg=False, 
-    channels=[1, 2, 2, 2], srange=[0, 4500],
+    channels=[1, 2, 2, 2], srange=[0, 2500],
 ):
     rti = RangeTimePlot(
         srange, dates, 
