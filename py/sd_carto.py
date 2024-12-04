@@ -387,11 +387,11 @@ class SDCarto(GeoAxes):
             )
         return
 
-    def overlay_eclipse(self):
+    def overlay_eclipse(self, cb=True):
         from cartopy.feature.nightshade import Nightshade
         self.add_feature(Nightshade(self.plot_date, alpha=0.2))
         alts = np.array([100])
-        lats = np.linspace(-90, 0, num=181)
+        lats = np.linspace(-90, 90, num=181)
         lons = np.linspace(-180, 180, num=181)
         p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
         p = np.ma.masked_invalid(p)[0,0,:,:]
@@ -417,13 +417,14 @@ class SDCarto(GeoAxes):
             levels=[1.0, 2.0]
         )
         # if cb: _add_colorbar(fig, ax, im)
-        utils.setsize(8)
-        fig = self.get_figure()
-        cpos = [1.25, 0.1, 0.025, 0.6]
-        cax = self.inset_axes(cpos, transform=self.transAxes)
-        cb = fig.colorbar(im, ax=self, cax=cax)
-        utils.setsize(10)
-        cb.set_label("Obscuration")
+        if cb:
+            utils.setsize(8)
+            fig = self.get_figure()
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = self.inset_axes(cpos, transform=self.transAxes)
+            cb = fig.colorbar(im, ax=self, cax=cax)
+            utils.setsize(10)
+            cb.set_label("Obscuration")
         return
 
     def overlay_fov(

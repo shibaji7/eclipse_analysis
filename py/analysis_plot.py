@@ -224,10 +224,10 @@ class Analysis(object):
             self.df = self.df[self.df.gflg==gflg]
             self.filter_summ += r"IS/GS$\sim$%d"%gflg
         
-        self.df["gsMap"] = self.df.apply(
-            lambda row: gsMapSlantRange(row["slist"]), 
-            axis = 1
-        )
+        # self.df["gsMap"] = self.df.apply(
+        #     lambda row: gsMapSlantRange(row["slist"]), 
+        #     axis = 1
+        # )
         if change_vel_sign:
             self.df["v"] = -1*self.df["v"]
         print("filter_summ>>>>>>>>>>",self.filter_summ)
@@ -275,17 +275,21 @@ def genererate_RTI(
     anl.generateRTI(params = params)
     return
 
-def generate_fovt(rad, dates):
+def generate_fovt(
+    rads, date, beams=[15, 11, 7, 3, 0], 
+    cb=True, central_longitude=120.0, central_latitude=-45.0,
+    extent=[-150, 130, -70, -50], plt_lats = np.arange(-90, -40, 10)
+):
     fan = Fan(
-        [rad], 
-        dates[0].replace(hour=0,minute=0) + dt.timedelta(hours=7) + dt.timedelta(minutes=35),
-        f""
+        rads, date, f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats
     )
-    fan.overlay_fovs(
-        rad,
-        beams=[15, 11, 7, 3, 0]
-    )
-    fan.save(f"figures/fanbeam.{rad}.png")
+    ax = fan.add_axes()
+    for rad in rads:
+        fan.overlay_fovs(rad,beams=beams,ax=ax)
+    fan.save(f"figures/fanbeam.{rads[0]}.png")
     fan.close() 
     return
 

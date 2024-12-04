@@ -11,6 +11,6 @@
 __pycache__/
 
 database/
-figures/
+figures*/
 *ipynb
 eclipse_calculator

@@ -45,15 +45,21 @@ class Fan(object):
         nrows=1,
         ncols=1,
         coord="geo",
-        cs=False,
+        cb=True,
+        central_longitude=120.0, central_latitude=-45.0,
+        extent=[-150, 130, -70, -50], plt_lats = np.arange(-90, -40, 10)
     ):
-        self.cs = cs
+        self.cb = cb
         self.rads = rads
         self.date = date
         self.nrows, self.ncols = nrows, ncols
         self._num_subplots_created = 0
         self.fig = plt.figure(figsize=(3 * ncols, 3 * nrows), dpi=300)
         self.coord = coord
+        self.central_longitude = central_longitude
+        self.central_latitude = central_latitude
+        self.plt_lats = plt_lats
+        self.extent = extent
         plt.suptitle(
             f"{self.date_string()} / {fig_title}"
             if fig_title
@@ -73,7 +79,10 @@ class Fan(object):
         from sd_carto import SDCarto
         self._num_subplots_created += 1
         # proj = cartopy.crs.SouthPolarStereo(central_longitude=120.0)
-        proj = cartopy.crs.Stereographic(central_longitude=120.0, central_latitude=-45.0)
+        proj = cartopy.crs.Stereographic(
+            central_longitude=self.central_longitude, 
+            central_latitude=self.central_latitude
+        )
         # proj = cartopy.crs.PlateCarree(central_longitude=-90.0)
         ax = self.fig.add_subplot(
             100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
@@ -83,10 +92,9 @@ class Fan(object):
             plot_date=self.date,
         )
         ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
-        ax.set_extent([-150, 130, -70, -50], crs=cartopy.crs.PlateCarree())
         plt_lons = np.arange(-180, 181, 15)
         mark_lons = np.arange(-180, 181, 30)
-        plt_lats = np.arange(-90, -40, 10)
+        plt_lats = self.plt_lats
         gl = ax.gridlines(crs=cartopy.crs.PlateCarree(), linewidth=0.2)
         gl.xlocator = mticker.FixedLocator(plt_lons)
         gl.ylocator = mticker.FixedLocator(plt_lats)
@@ -95,6 +103,7 @@ class Fan(object):
         gl.n_steps = 90
         ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k")
         ax.mark_longitudes(mark_lons, fontsize="xx-small", color="k")
+        ax.set_extent(self.extent, crs=cartopy.crs.PlateCarree())
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()
         ax.text(
@@ -108,7 +117,7 @@ class Fan(object):
             rotation=90,
         )
         ax.overaly_eclipse_path(lineWidth=0.2)
-        ax.overlay_eclipse()
+        ax.overlay_eclipse(self.cb)
         return ax
 
     def date_string(self, label_style="web"):
@@ -123,7 +132,7 @@ class Fan(object):
         self, rad, frame, beams=[], ax=None, 
         maxGate=45, col="k", p_name="vel",
         p_max=30, p_min=-30, cmap="Spectral",
-        label="Velocity [m/s]"
+        label="Velocity [m/s]", cb=True,
     ):
         """
         Generate plot with dataset overlaid
@@ -141,7 +150,7 @@ class Fan(object):
                 ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="r",
                 lineWidth=1.2) for b in beams
             ]
-        ax.overlay_eclipse()
+        ax.overlay_eclipse(cb)
         return
 
     def generate_fovs(self, fds, beams=[], laytec=False):

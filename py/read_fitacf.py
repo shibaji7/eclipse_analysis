@@ -34,13 +34,16 @@ class Radar(object):
             dt.datetime(2017,8,21),
             dt.datetime(2021,12,4),
         ]:
-            self.create_eclipse_shadow()
+            logger.info("Creating shadows!")
+            # self.create_eclipse_shadow()
         self.calculate_decay_rate()
         return
     
     def __setup__(self):
         logger.info(f"Setup radar: {self.rad}")
-        self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
+        date = self.dates[0].strftime("%Y%m%d")
+        self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
+        # self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
         self.fov = pydarn.Coords.GEOGRAPHIC(self.hdw.stid)
@@ -52,7 +55,7 @@ class Radar(object):
         return lats[:,beam], lons[:,beam]
 
     def __fetch_data__(self):
-        self.fname = f"database/{self.rad}.{self.type}.csv"
+        self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
         logger.info(f"load files {self.fname}")
         if self.clean: os.remove(self.fname)
         if os.path.exists(self.fname):
@@ -236,21 +239,26 @@ class Radar(object):
         return
 
 if __name__ == "__main__":
-    dates = [dt.datetime(2024,4,8), dt.datetime(2024,4,9)]
+    # dates = [dt.datetime(2024,4,8), dt.datetime(2024,4,9)]
+    # Radar("bks", dates, type="fitacf")
+    # Radar("fhe", dates, type="fitacf")
+    # Radar("fhw", dates, type="fitacf")
+    # Radar("kap", dates, type="fitacf")
+    # Radar("gbr", dates, type="fitacf")
+    dates = [dt.datetime(2017,8,21), dt.datetime(2017,8,22)]
+    Radar("bks", dates, type="fitacf")
+    # Radar("fhe", dates, type="fitacf")
+    # Radar("fhw", dates, type="fitacf")
+    # Radar("cve", dates, type="fitacf")
+    # Radar("cvw", dates, type="fitacf")
+    # dates = [dt.datetime(2023,10,14), dt.datetime(2023,10,15)]
+    # Radar("fhe", dates, type="fitacf")
+    # Radar("fhw", dates, type="fitacf")
+    # Radar("cve", dates, type="fitacf")
+    # Radar("cvw", dates, type="fitacf")
+    # dates = [dt.datetime(2021,12,2), dt.datetime(2021,12,7)]
+    # Radar("fir", dates, type="fitacf")
+    dates = [dt.datetime(2017,5,27), dt.datetime(2017,5,28)]
     Radar("bks", dates, type="fitacf")
     Radar("fhe", dates, type="fitacf")
     Radar("fhw", dates, type="fitacf")
-    Radar("kap", dates, type="fitacf")
-    Radar("gbr", dates, type="fitacf")
-    dates = [dt.datetime(2017,8,21), dt.datetime(2017,8,22)]
-    Radar("fhe", dates, type="fitacf")
-    Radar("fhw", dates, type="fitacf")
-    Radar("cve", dates, type="fitacf")
-    Radar("cvw", dates, type="fitacf")
-    dates = [dt.datetime(2023,10,14), dt.datetime(2023,10,15)]
-    Radar("fhe", dates, type="fitacf")
-    Radar("fhw", dates, type="fitacf")
-    Radar("cve", dates, type="fitacf")
-    Radar("cvw", dates, type="fitacf")
-    dates = [dt.datetime(2021,12,2), dt.datetime(2021,12,7)]
-    Radar("fir", dates, type="fitacf")
