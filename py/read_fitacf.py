@@ -42,8 +42,8 @@ class Radar(object):
     def __setup__(self):
         logger.info(f"Setup radar: {self.rad}")
         date = self.dates[0].strftime("%Y%m%d")
-        self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
-        # self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
+        # self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
+        self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
         self.fov = pydarn.Coords.GEOGRAPHIC(self.hdw.stid)
@@ -56,6 +56,7 @@ class Radar(object):
 
     def __fetch_data__(self):
         self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
+        # self.fname = f"database/{self.rad}.{self.type}.csv"
         logger.info(f"load files {self.fname}")
         if self.clean: os.remove(self.fname)
         if os.path.exists(self.fname):

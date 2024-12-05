@@ -161,9 +161,9 @@ class Analysis(object):
             )
             ax.set_ylim(param["ylim"])
             if param["xlim"]: ax.set_xlim(param["xlim"])
-            if i == 0:
-                ax.text(0.99, 1.05, self.filter_summ, va="bottom",
-                        ha="right", transform=ax.transAxes)
+            # if i == 0:
+            #     ax.text(0.99, 1.05, self.filter_summ, va="bottom",
+            #             ha="right", transform=ax.transAxes)
         # im = ax.pcolormesh(
         #     self.tecv["X"], self.tecv["Y"], self.tecv["Z"].T, 
         #     lw=0.01, edgecolors="None", cmap="YlOrRd",
@@ -209,6 +209,7 @@ class Analysis(object):
             self.df = self.df[self.df.channel==channel]
             channel = "a" if channel==1 else "b"
             self.filter_summ += f"Channel: {channel}\n"
+        if self.rad == "fir": self.df.frang=0
         self.df["srange"] = (self.df.slist*self.df.rsep) + self.df.frang
         self.df = self.df[
             (self.df.time>=self.dates[0]) & 
@@ -223,18 +224,21 @@ class Analysis(object):
         if gflg: 
             self.df = self.df[self.df.gflg==gflg]
             self.filter_summ += r"IS/GS$\sim$%d"%gflg
-        
-        # self.df["gsMap"] = self.df.apply(
-        #     lambda row: gsMapSlantRange(row["slist"]), 
-        #     axis = 1
-        # )
+        from calc_vheight import chisham, thomas, standard_virtual_height
+        self.df["alt"] = self.df.apply(
+            lambda row: standard_virtual_height(row["srange"]), 
+            axis = 1
+        )
+        self.df["gsMap"] = self.df.apply(
+            lambda row: gsMapSlantRange(row["srange"], row["alt"]), 
+            axis = 1
+        )
         if change_vel_sign:
             self.df["v"] = -1*self.df["v"]
-        print("filter_summ>>>>>>>>>>",self.filter_summ)
         return
     
 def genererate_RTI(
-        rad, beam, dates, type, srange=[0, 2500],
+        rad, beam, dates, type, srange=[0, 1500],
         param_list=["v", "p_l"], gflg=False,
         tfreq=None, channel=None
 ):

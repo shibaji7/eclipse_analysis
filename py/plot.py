@@ -49,14 +49,11 @@ class RangeTimePlot(object):
         ax = self._add_axis()
         logger.info(f"Unique beams: {df.bmnum.unique()}")
         df = df[df.bmnum==beam]
-        if remove_srange:
-            df = df[df.srange>=remove_srange]
-            df.srange /= 2
         if beam not in df.bmnum.unique():
             logger.error(f"Beam {beam} was not sounded!")
-        X, Y, Z = utils.get_gridded_parameters(df, xparam="time", yparam="srange", zparam=zparam)
+        X, Y, Z = utils.get_gridded_parameters(df, xparam="time", yparam="gsMap", zparam=zparam)
         if add_gflg:
-            Xg, Yg, Zg = utils.get_gridded_parameters(df, xparam="time", yparam="srange", zparam="gflg")
+            Xg, Yg, Zg = utils.get_gridded_parameters(df, xparam="time", yparam="gsMap", zparam="gflg")
         cmap = cmap
         # cmap.set_bad("w", alpha=0.0)
         # Configure axes
@@ -65,7 +62,7 @@ class RangeTimePlot(object):
         ax.xaxis.set_major_locator(hours)
         ax.set_xlabel(xlabel, fontdict={"size":12, "fontweight": "bold"})
         ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
-        ax.set_ylim(self.nrang)
+        # ax.set_ylim(self.nrang)
         ax.set_ylabel(ylabel, fontdict={"size":12, "fontweight": "bold"})
         ax.set_title(title, loc="left", fontdict={"fontweight": "bold"})
         if add_gflg:
@@ -98,7 +95,7 @@ class RangeTimePlot(object):
         fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
         glat, glon = fov[0][:101, beam], fov[1][:101, beam]
         p = utils.get_rti_eclipse(ddates, glat, glon)
-        srange = 180 + (45 * np.arange(101))
+        srange = (45 * np.arange(101))
         obs = np.copy(p)
         # obs[obs>1.] = np.nan
         im = ax.contourf(
