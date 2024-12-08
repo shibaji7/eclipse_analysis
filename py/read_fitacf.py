@@ -55,8 +55,8 @@ class Radar(object):
         return lats[:,beam], lons[:,beam]
 
     def __fetch_data__(self):
-        self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
-        # self.fname = f"database/{self.rad}.{self.type}.csv"
+        # self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
+        self.fname = f"database/{self.rad}.{self.type}.csv"
         logger.info(f"load files {self.fname}")
         if self.clean: os.remove(self.fname)
         if os.path.exists(self.fname):

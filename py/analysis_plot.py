@@ -238,7 +238,7 @@ class Analysis(object):
         return
     
 def genererate_RTI(
-        rad, beam, dates, type, srange=[0, 1500],
+        rad, beam, dates, type, srange=[0, 2500],
         param_list=["v", "p_l"], gflg=False,
         tfreq=None, channel=None
 ):
@@ -259,7 +259,7 @@ def genererate_RTI(
                 "title": "", 
                 "xlim": dates,
                 "p_max": 30, "p_min":-30, 
-                "xlabel": "", "ylabel": "Slant Range \n mapped to 1-hop reflection point [km]",
+                "xlabel": "", "ylabel": "Ground Range \n mapped to 1-hop reflection point [km]",
                 "zparam":"v", "label": "Velocity [m/s]",
                 "cmap": "jet_r", "cbar": True, "gflg":gflg
             }

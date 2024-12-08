@@ -17,8 +17,8 @@ from analysis_plot import (
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--start", default=dt.datetime(2017,8,21,15), help="Start date", type=dparser.parse)
-    parser.add_argument("-e", "--end", default=dt.datetime(2017,8,21,20), help="End date", type=dparser.parse)
+    parser.add_argument("-s", "--start", default=dt.datetime(2021,12,4,2), help="Start date", type=dparser.parse)
+    parser.add_argument("-e", "--end", default=dt.datetime(2021,12,4,14), help="End date", type=dparser.parse)
     parser.add_argument("-r", "--rad", default="fir", help="Radar code", type=str)
     parser.add_argument("-f", "--file_type", default="fitacf", help="File type other than fitacf", type=str)
     parser.add_argument("-b", "--beam", default=15, help="Radar beam", type=int)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 [args.start, args.end],
                 args.file_type,
                 param_list=args.params,
-                channel=None, tfreq=None
+                channel=args.channel, tfreq=args.tfreq
             )
         # generate_time_series_plots(
         #     [args.start, args.end], args.rad, args.beam,
