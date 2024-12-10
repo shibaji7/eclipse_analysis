@@ -52,7 +52,7 @@ def chisham(target_range: float, **kwargs):
         return A_const[2] + B_const[2] * target_range + C_const[2] *\
                  target_range**2
 
-def thomas(target_range: float, sctr_type: int):
+def Thomas(target_range: float, sctr_type: int):
     """
     Mapping ionospheric backscatter measured by the SuperDARN HF
     radars – Part 1: A new empirical virtual height model by

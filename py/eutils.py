@@ -129,7 +129,7 @@ def get_gridded_parameters(q, xparam="time", yparam="slist", zparam="v", round=F
     Z = np.ma.masked_where(
             np.isnan(plotParamDF[zparam].values),
             plotParamDF[zparam].values)
-    Z = apply_2d_filter(Z)
+    # Z = apply_2d_filter(Z)
     return X,Y,Z
 
 def apply_2d_filter(data, weights=np.array([[1,2,1],[2,5,2],[1,2,1]])):

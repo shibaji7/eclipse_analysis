@@ -38,12 +38,36 @@ class Radar(object):
             # self.create_eclipse_shadow()
         self.calculate_decay_rate()
         return
+
+    def calculate_vheight(self, n_hop):
+        if self.rad == "fir": self.df.frang = 0.
+        self.df["srange"] = self.df.frang + (self.df.rsep * self.df.slist)
+        logger.info("Calculate v-Height...")
+        from calc_vheight import Thomas
+        # self.df["Thomas_vheight"] = self.df.apply(
+        #     lambda row: Thomas(row["srange"], row["gflg"]), axis=1
+        # )
+        self.df["Thomas_vheight"] = self.df.srange.apply(
+            lambda x: Thomas(x, 1)
+        )
+        return
+
+    def calculate_ground_range(self, n_hop=1):
+        self.calculate_vheight(n_hop)
+        logger.info("Calculate 1-hop ground range to ionospheric point...")
+        Re = 6731.0 # Radius of the Earth
+        a, b = (
+            Re**2+(Re+self.df.Thomas_vheight)**2-(self.df.srange/(2*n_hop))**2,
+            2*Re*(Re+self.df.Thomas_vheight)
+        )
+        self.df["Gn"] = n_hop*Re*np.arccos(a/b)
+        return
     
     def __setup__(self):
         logger.info(f"Setup radar: {self.rad}")
         date = self.dates[0].strftime("%Y%m%d")
-        # self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
-        self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
+        self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
+        # self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
         self.fov = pydarn.Coords.GEOGRAPHIC(self.hdw.stid)
@@ -55,8 +79,8 @@ class Radar(object):
         return lats[:,beam], lons[:,beam]
 
     def __fetch_data__(self):
-        # self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
-        self.fname = f"database/{self.rad}.{self.type}.csv"
+        self.fname = f"database/{self.rad}.{self.type}.{self.dates[0].strftime('%Y%m%d')}.csv"
+        # self.fname = f"database/{self.rad}.{self.type}.csv"
         logger.info(f"load files {self.fname}")
         if self.clean: os.remove(self.fname)
         if os.path.exists(self.fname):
@@ -111,8 +135,8 @@ class Radar(object):
                 slist.extend(r["slist"])
                 p_l.extend(r["p_l"])
                 w_l.extend(r["w_l"])
-                #if "elv" in r.keys(): elv.extend(r["elv"])
-                #if "phi0" in r.keys(): phi0.extend(r["phi0"])                
+                if "elv" in r.keys(): elv.extend(r["elv"])
+                if "phi0" in r.keys(): phi0.extend(r["phi0"])                
             
         self.df = pd.DataFrame()
         self.df["v"] = v
@@ -137,6 +161,7 @@ class Radar(object):
                 (self.df.time>=self.dates[0]) & 
                 (self.df.time<=self.dates[1])
             ]
+        self.calculate_ground_range()
         self.df.to_csv(self.fname, index=False, header=True)
         return
 
@@ -229,7 +254,6 @@ class Radar(object):
                 frequency.add(np.rint(t))
                 tf.add(str(np.rint(t)))
             txt += f"Beam: {bm}, t={x}, f={','.join(list(tf))}\n"
-        print(txt)
         return
 
     def calculate_decay_rate(self):
@@ -246,8 +270,8 @@ if __name__ == "__main__":
     # Radar("fhw", dates, type="fitacf")
     # Radar("kap", dates, type="fitacf")
     # Radar("gbr", dates, type="fitacf")
-    dates = [dt.datetime(2017,8,21), dt.datetime(2017,8,22)]
-    Radar("bks", dates, type="fitacf")
+    # dates = [dt.datetime(2017,8,21), dt.datetime(2017,8,22)]
+    # Radar("bks", dates, type="fitacf")
     # Radar("fhe", dates, type="fitacf")
     # Radar("fhw", dates, type="fitacf")
     # Radar("cve", dates, type="fitacf")
@@ -259,7 +283,8 @@ if __name__ == "__main__":
     # Radar("cvw", dates, type="fitacf")
     # dates = [dt.datetime(2021,12,2), dt.datetime(2021,12,7)]
     # Radar("fir", dates, type="fitacf")
-    dates = [dt.datetime(2017,5,27), dt.datetime(2017,5,28)]
-    Radar("bks", dates, type="fitacf")
-    Radar("fhe", dates, type="fitacf")
-    Radar("fhw", dates, type="fitacf")
+    # dates = [dt.datetime(2017,5,27), dt.datetime(2017,5,28)]
+    # Radar("bks", dates, type="fitacf")
+    # Radar("fhe", dates, type="fitacf")
+    # Radar("fhw", dates, type="fitacf")
+    pass

@@ -43,19 +43,19 @@ class RangeTimePlot(object):
         utils.setsize(12)
         return
     
-    def addParamPlot(self, rad, df, beam, title, p_max=100, p_min=-100, xlabel="Time UT",
-             ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap="jet_r", 
-             cbar=False, omni=None, add_gflg=False, eclipse_cbar=True, remove_srange=500):
+    def addParamPlot(
+        self, rad, df, beam, title, p_max=100, p_min=-100, xlabel="Time UT",
+        ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap="jet_r", yparam="slist",
+        cbar=False, omni=None, add_gflg=False, kind="pmap"
+    ):
         ax = self._add_axis()
         logger.info(f"Unique beams: {df.bmnum.unique()}")
         df = df[df.bmnum==beam]
         if beam not in df.bmnum.unique():
             logger.error(f"Beam {beam} was not sounded!")
-        X, Y, Z = utils.get_gridded_parameters(df, xparam="time", yparam="gsMap", zparam=zparam)
+        X, Y, Z = utils.get_gridded_parameters(df, xparam="time", yparam=yparam, zparam=zparam)
         if add_gflg:
-            Xg, Yg, Zg = utils.get_gridded_parameters(df, xparam="time", yparam="gsMap", zparam="gflg")
-        cmap = cmap
-        # cmap.set_bad("w", alpha=0.0)
+            Xg, Yg, Zg = utils.get_gridded_parameters(df, xparam="time", yparam=yparam, zparam="gflg")
         # Configure axes
         ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
         hours = mdates.HourLocator(byhour=range(0, 24, 1))
@@ -73,10 +73,25 @@ class RangeTimePlot(object):
             im = ax.pcolormesh(X, Y, Z.T, lw=0.01, edgecolors="None", cmap=cmap,
                         vmax=p_max, vmin=p_min, shading="nearest", zorder=3)
         else:
-            im = ax.pcolormesh(X, Y, Z.T, lw=0.01, edgecolors="None", cmap=cmap,
-                        vmax=p_max, vmin=p_min, shading="nearest", zorder=3)
+            if kind == "pmap":
+                im = ax.pcolormesh(
+                    X, Y, Z.T, lw=0.01, edgecolors="None", cmap=cmap,
+                    vmax=p_max, vmin=p_min, shading="nearest", zorder=3
+                )
+            else:
+                im = ax.scatter(
+                    X.ravel(),
+                    Y.ravel(),
+                    c=Z.T.ravel(),
+                    cmap=cmap,
+                    vmax=p_max,
+                    vmin=p_min,
+                    s=0.1,
+                    marker="D",
+                    alpha=1.0,
+                    zorder=3
+                )
         ax.tick_params(direction="out", which="both")
-        self.overlay_eclipse_shadow(rad, beam, self.unique_times, ax, eclipse_cbar)
         if omni is None: 
             if cbar: self._add_colorbar(im, ax, cmap, label=label)
             return ax

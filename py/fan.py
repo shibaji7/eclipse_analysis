@@ -47,7 +47,7 @@ class Fan(object):
         coord="geo",
         cb=True,
         central_longitude=120.0, central_latitude=-45.0,
-        extent=[-150, 130, -70, -50], plt_lats = np.arange(-90, -40, 10)
+        extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10)
     ):
         self.cb = cb
         self.rads = rads
@@ -95,6 +95,7 @@ class Fan(object):
         plt_lons = np.arange(-180, 181, 15)
         mark_lons = np.arange(-180, 181, 30)
         plt_lats = self.plt_lats
+        ax.set_extent(self.extent, crs=cartopy.crs.PlateCarree())
         gl = ax.gridlines(crs=cartopy.crs.PlateCarree(), linewidth=0.2)
         gl.xlocator = mticker.FixedLocator(plt_lons)
         gl.ylocator = mticker.FixedLocator(plt_lats)
@@ -103,7 +104,6 @@ class Fan(object):
         gl.n_steps = 90
         ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k")
         ax.mark_longitudes(mark_lons, fontsize="xx-small", color="k")
-        ax.set_extent(self.extent, crs=cartopy.crs.PlateCarree())
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()
         ax.text(

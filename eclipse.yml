@@ -250,10 +250,14 @@ dependencies:
   - zstd=1.5.2=h8a70e8d_1
   - pip:
       - aacgmv2==2.6.2
+      - apexpy==2.0.2
+      - astropy==6.0.1
+      - astropy-iers-data==0.2024.11.18.0.35.2
       - autoflake==1.4
       - charset-normalizer==2.0.12
       - data==0.4
       - deepdish==0.3.7
+      - eclipse-calc==0.15
       - ephem==4.1.4
       - fortranformat==2.0.0
       - funcsigs==1.0.2
@@ -264,11 +268,12 @@ dependencies:
       - iricore==1.8.0
       - latex==0.7.0
       - numexpr==2.8.3
-      - numpy==1.26.4
+      - numpy==1.25.0
       - opencv-python==4.9.0.80
       - pathlib2==2.3.7.post1
-      - pydarn==3.0
+      - pydarn==4.0
       - pydarnio==1.1.1
+      - pyerfa==2.0.1.5
       - pyflakes==2.4.0
       - pylap==0.1.0a0
       - pymap3d==3.1.0
