@@ -304,6 +304,49 @@ class SDCarto(GeoAxes):
             mlats, mlons = lats, lons
         return mlats, mlons
 
+    def overlay_instument(
+        self,
+        name, lat, lon,
+        tx=cartopy.crs.PlateCarree(),
+        marker="D",
+        zorder=5,
+        markerColor="m",
+        markerSize=2,
+        fontSize=6,
+        font_color="m",
+        xOffset=5,
+        yOffset=-1.5,
+    ):
+        """Adding the radar location"""
+        if "aacgm" in self.coords:
+            lat, lon = self.to_aagcm(lat, lon)
+        self.scatter(
+            [lon],
+            [lat],
+            s=markerSize,
+            marker=marker,
+            color=markerColor,
+            zorder=zorder,
+            transform=tx,
+            lw=0.8,
+            alpha=0.4,
+        )
+        lat, lon = lat + yOffset, lon + xOffset
+        if "aacgm" in self.coords:
+            lat, lon = self.to_aagcm(lat, lon)
+        x, y = self.projection.transform_point(lon, lat, src_crs=tx)
+        self.text(
+            x,
+            y,
+            name.upper(),
+            ha="center",
+            va="center",
+            transform=self.projection,
+            fontdict={"color": font_color, "size": fontSize},
+            alpha=0.8,
+        )
+        return
+
     def overlay_radar(
         self,
         rad,
@@ -312,7 +355,7 @@ class SDCarto(GeoAxes):
         zorder=2,
         markerColor="k",
         markerSize=2,
-        fontSize="xx-small",
+        fontSize=6,
         font_color="k",
         xOffset=5,
         yOffset=-1.5,

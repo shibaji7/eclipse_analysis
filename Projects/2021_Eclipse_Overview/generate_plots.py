@@ -13,6 +13,7 @@ sys.path.append("py/")
 from fan import Fan
 from read_fitacf import Radar
 from plot import RangeTimePlot
+import eutils as utils
 
 def setup():
     import os
@@ -40,7 +41,9 @@ def generate_fov_overview(
 def generate_conjugate_fov_overview(
     rads, conj_radar, date, beams=[], cb=True, 
     central_longitude=120.0, central_latitude=-45.0,
-    extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10)
+    extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10),
+    overlay_eclipse_other_hemi=False, hemi="south", 
+    other_instruments=[],
 ):
     fan = Fan(
         rads, date, f"", cb=cb,
@@ -110,7 +113,48 @@ def generate_conjugate_fov_overview(
                 fontdict={"color": col, "size": "xx-small"},
                 alpha=0.8,
             )
-    fan.save(f"figures/fanbeam.conj.{date.strftime('%Y%m%d%H%M')}.png")
+    
+    if overlay_eclipse_other_hemi:
+        year = date.year
+        o = utils.read_eclispe_path(year)
+        keys, colors = ["C", "N", "S"], ["k", "r", "r"]
+        for k, c in zip(keys, colors):
+            newglat, newglon, _ = apex.map_to_height(o["Lat"+k].tolist(), o["Lon"+k].tolist(), 100, 100, conjugate=True)
+            xy = fan.proj.transform_points(cartopy.crs.PlateCarree(), newglon.T, newglat.T)
+            x, y = xy[:, 0], xy[:, 1]
+            ax.plot(
+                x, y,
+                color=c,
+                zorder=2,
+                linewidth=0.8,
+                ls="--",
+            )
+
+        # # Overlay eclipse shadow
+        # alts = np.array([100])
+        # lats = np.linspace(-90, 0, num=361)
+        # lons = np.linspace(-180, 180, num=361)
+        # p, _, _= utils.get_eclipse(date, alts, lats, lons)
+        # p = np.ma.masked_invalid(p)[0,0,:,:]
+        # obs = np.copy(p)
+        # obs[obs>1.] = np.nan
+        # newglat, newglon, _ = apex.map_to_height(
+        #     lats, lons, 100, 100, 
+        #     conjugate=True
+        # )
+        # im = ax.contourf(
+        #     newglon,
+        #     newglat,
+        #     obs,
+        #     transform=cartopy.crs.PlateCarree(),
+        #     cmap="Blues", alpha=0.6,
+        #     levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+        # )
+    if len(other_instruments):
+        for o_inst in other_instruments:
+            print(o_inst)
+            ax.overlay_instument(o_inst[0], o_inst[2], o_inst[3])
+    fan.save(f"figures/fanbeam.{hemi}.{date.strftime('%Y%m%d%H%M')}.png")
     fan.close() 
     return
 

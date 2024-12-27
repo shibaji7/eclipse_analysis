@@ -19,16 +19,28 @@ from generate_plots import (
     create_rti_plots
 )
 
-methods = ["plot_rti"]
+methods = ["download"]
 setup()
 
 if "plot_fov" in methods:
-    # Create 2021 Eclipse Geometry on southerin hemisphere
+    ## Create 2021 Eclipse Geometry on southerin hemisphere
     generate_fov_overview(
         ["fir"], dt.datetime(2021,12,4,7,30), cb=True,
     )
     generate_conjugate_fov_overview(
         ["fir"], ["sas", "bks", "pgr"], dt.datetime(2021,12,4,7,30), cb=True,
+        hemi="south"
+    )
+    generate_conjugate_fov_overview(
+        ["sas", "bks", "pgr"], ["fir"], dt.datetime(2021,12,4,7,30), cb=False,
+        central_longitude=-120.0, central_latitude=50.0,
+        extent=[-150, -60, 30, 90], plt_lats = np.arange(30, 90, 10),
+        overlay_eclipse_other_hemi=True, hemi="north", 
+        other_instruments=[
+            ("ott", "mag", 45.4030, -75.5520), 
+            ("brd", "mag", 49.8700, -99.9739),
+            ("fcc", "mag", 58.7590, -94.0880)
+        ]
     )
 
 if "download" in methods:
@@ -48,7 +60,20 @@ if "download" in methods:
                 type="fitacf"
             )
 
+    from supermag import SuperMAG
+    sm = SuperMAG.FetchSM(
+        "database/", 
+        [start_date, start_date+dt.datetime(5)], 
+        uid="shibaji7", 
+        stations=["fcc", "brd", "ott"]
+    )
+
 if "plot_rti" in methods:
-    rad = "fir"
+    rads = "fir"
+    beam = 15
+    yscale = "srange" 
+    range = [0,4500]
+    channel = None
+    tfreq = 12.
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     create_rti_plots(rad, dates)
