@@ -19,7 +19,7 @@ from generate_plots import (
     create_rti_plots
 )
 
-methods = ["download"]
+methods = ["plot_fov"]
 setup()
 
 if "plot_fov" in methods:
@@ -39,7 +39,8 @@ if "plot_fov" in methods:
         other_instruments=[
             ("ott", "mag", 45.4030, -75.5520), 
             ("brd", "mag", 49.8700, -99.9739),
-            ("fcc", "mag", 58.7590, -94.0880)
+            ("fcc", "mag", 58.7590, -94.0880),
+            #("fcc", "mag", 58.7590, -94.0880),
         ]
     )
 
@@ -63,17 +64,16 @@ if "download" in methods:
     from supermag import SuperMAG
     sm = SuperMAG.FetchSM(
         "database/", 
-        [start_date, start_date+dt.datetime(5)], 
+        [start_date, start_date+dt.timedelta(5)], 
         uid="shibaji7", 
         stations=["fcc", "brd", "ott"]
     )
 
 if "plot_rti" in methods:
-    rads = "fir"
-    beam = 15
+    rad_beams = [("pgr", 14)]
     yscale = "srange" 
     range = [0,4500]
     channel = None
-    tfreq = 12.
+    tfreq = None
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
-    create_rti_plots(rad, dates)
+    create_rti_plots(rad_beams, dates, tfreq=tfreq, channel=channel)

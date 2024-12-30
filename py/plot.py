@@ -14,6 +14,7 @@ from matplotlib.dates import DateFormatter
 import datetime as dt
 import numpy as np
 from loguru import logger
+from apexpy import Apex
 
 import cartopy.crs as ccrs
 from cartopy.feature.nightshade import Nightshade
@@ -64,7 +65,7 @@ class RangeTimePlot(object):
         ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
         # ax.set_ylim(self.nrang)
         ax.set_ylabel(ylabel, fontdict={"size":12, "fontweight": "bold"})
-        ax.set_title(title, loc="left", fontdict={"fontweight": "bold"})
+        ax.text(0.05, 0.9, title, ha="left", va="center", fontdict={"fontweight": "bold"}, transform=ax.transAxes)
         if add_gflg:
             Zx = np.ma.masked_where(Zg==0, Zg)
             ax.pcolormesh(Xg, Yg, Zx.T, lw=0.01, edgecolors="None", cmap="gray",
@@ -163,7 +164,7 @@ class RangeTimePlot(object):
         self.fig.clf()
         plt.close()
 
-    def _add_colorbar(self, im, ax, colormap, label="", dx=0.01):
+    def _add_colorbar(self, im, ax, colormap, label="", dx=0.15):
         """
         Add a colorbar to the right of an axis.
         :param fig:
@@ -182,4 +183,50 @@ class RangeTimePlot(object):
                    orientation="vertical", 
                    cmap=colormap)
         cb2.set_label(label)
+        return
+
+
+    def add_supermag_TS(self, ax, o, ylabal, t_ax=None):
+        t_ax = t_ax if t_ax else ax.twinx()
+        t_ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
+        t_ax.set_ylim(0, 360)
+        hours = mdates.HourLocator(byhour=range(0, 24, 1))
+        t_ax.xaxis.set_major_locator(hours)
+        t_ax.set_ylabel(ylabal, fontdict={"size":12, "fontweight": "bold"})
+        t_ax.plot(
+            o.tval, o["E_nez"], ls="-", lw=0.8, color="r", zorder=4, label=r"$E_{dB}$"
+        )
+        t_ax.plot(
+            o.tval, o["N_nez"], ls="-", lw=0.8, color="g", zorder=4, label=r"$N_{dB}$"
+        )
+        t_ax.plot(
+            o.tval, o["Z_nez"], ls="-", lw=0.8, color="b", zorder=4, label=r"$Z_{dB}$"
+        )
+        t_ax.set_ylim(-500, 500)
+        t_ax.legend(loc=1)
+        return t_ax
+
+
+    def add_conjugate_eclipse(self, rad, beam, dates, ax):
+        apex = Apex(dates[0])
+        ddates = [
+            dates[0]+dt.timedelta(minutes=i) 
+            for i in range(int((dates[1]-dates[0]).total_seconds()/60))
+        ]
+        import pydarn
+        hdw = pydarn.read_hdw_file(rad)
+        fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
+        glat, glon = fov[0][:, beam], fov[1][:, beam]
+        newglat, newglon, _ = apex.map_to_height(glat, glon, 100, 100, conjugate=True)
+        p = utils.get_rti_eclipse(ddates, newglat, newglon)
+        srange = (45 * np.arange(len(glat)))
+        obs = np.copy(p)
+        # obs[obs>1.] = np.nan
+        im = ax.contourf(
+            ddates,
+            srange,
+            obs.T,
+            cmap="Blues", alpha=0.6,
+            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+        )
         return

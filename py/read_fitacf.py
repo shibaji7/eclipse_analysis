@@ -18,6 +18,44 @@ import eutils as utils
 from tqdm import tqdm
 tqdm.pandas()
 
+def gsMapSlantRange(slant_range, altitude=None, elevation=None):
+    """Calculate the ground scatter mapped slant range.
+    See Bristow et al. [1994] for more details. (Needs full reference)
+    Parameters
+    ----------
+    slant_range
+        normal slant range [km]
+    altitude : Optional[float]
+        altitude [km] (defaults to 300 km)
+    elevation : Optional[float]
+        elevation angle [degree]
+    Returns
+    -------
+    gsSlantRange
+        ground scatter mapped slant range [km] (typically slightly less than
+        0.5 * slant_range.  Will return -1 if
+        (slant_range**2 / 4. - altitude**2) >= 0. This occurs when the scatter
+        is too close and this model breaks down.
+    """
+    Re = 6731.1
+
+    # Make sure you have altitude, because these 2 projection models rely on it
+    if not elevation and not altitude:
+        # Set default altitude to 300 km
+        altitude = 300.0
+    elif elevation and not altitude:
+        # If you have elevation but not altitude, then you calculate altitude,
+        # and elevation will be adjusted anyway
+        altitude = np.sqrt(Re ** 2 + slant_range ** 2 + 2. * slant_range * Re *
+                           np.sin(np.radians(elevation))) - Re
+    if (slant_range**2) / 4. - altitude ** 2 >= 0:
+        gsSlantRange = Re * \
+            np.arcsin(np.sqrt(slant_range ** 2 / 4. - altitude ** 2) / Re)
+        # From Bristow et al. [1994]
+    else:
+        gsSlantRange = -1
+    return gsSlantRange
+
 class Radar(object):
 
     def __init__(self, rad, dates=None, clean=False, type="fitacf",):
@@ -43,12 +81,23 @@ class Radar(object):
         if self.rad == "fir": self.df.frang = 0.
         self.df["srange"] = self.df.frang + (self.df.rsep * self.df.slist)
         logger.info("Calculate v-Height...")
-        from calc_vheight import Thomas
+        from calc_vheight import Thomas, chisham
         # self.df["Thomas_vheight"] = self.df.apply(
         #     lambda row: Thomas(row["srange"], row["gflg"]), axis=1
         # )
         self.df["Thomas_vheight"] = self.df.srange.apply(
             lambda x: Thomas(x, 1)
+        )
+        self.df["Chisham_vheight"] = self.df.srange.apply(
+            lambda x: chisham(x)
+        )
+        self.df["Chisham_gsmap"] = self.df.apply(
+            lambda row: gsMapSlantRange(row["srange"], row["Chisham_vheight"]), 
+            axis = 1
+        )
+        self.df["Thomas_gsmap"] = self.df.apply(
+            lambda row: gsMapSlantRange(row["srange"], row["Thomas_vheight"]), 
+            axis = 1
         )
         return
 

@@ -129,79 +129,61 @@ def generate_conjugate_fov_overview(
                 linewidth=0.8,
                 ls="--",
             )
-
-        # # Overlay eclipse shadow
-        # alts = np.array([100])
-        # lats = np.linspace(-90, 0, num=361)
-        # lons = np.linspace(-180, 180, num=361)
-        # p, _, _= utils.get_eclipse(date, alts, lats, lons)
-        # p = np.ma.masked_invalid(p)[0,0,:,:]
-        # obs = np.copy(p)
-        # obs[obs>1.] = np.nan
-        # newglat, newglon, _ = apex.map_to_height(
-        #     lats, lons, 100, 100, 
-        #     conjugate=True
-        # )
-        # im = ax.contourf(
-        #     newglon,
-        #     newglat,
-        #     obs,
-        #     transform=cartopy.crs.PlateCarree(),
-        #     cmap="Blues", alpha=0.6,
-        #     levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
-        # )
     if len(other_instruments):
         for o_inst in other_instruments:
-            print(o_inst)
             ax.overlay_instument(o_inst[0], o_inst[2], o_inst[3])
     fan.save(f"figures/fanbeam.{hemi}.{date.strftime('%Y%m%d%H%M')}.png")
     fan.close() 
     return
 
 def create_rti_plots(
-    rad, dates, beam=15, yscale="Gn", 
-    range=[0,4500], channel=None, tfreq=12.
+    rad_beams, dates, beam=15, yscale="Gn", 
+    range=[0,2500], channel=None, tfreq=None
 ):
-    date = dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
-    title = fr"Rad: {rad} / Beam: {beam} / Date:  {date}"
-    radar = Radar(rad, dates, type="fitacf")
-    radar.calculate_ground_range()
-    df = radar.df.copy()
-    if channel:
-        df = df[df.channel==channel]
-    df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
-    if tfreq: 
-        df = df[df.unique_tfreq==tfreq]
+
+    from supermag import SuperMAG
+    sm = SuperMAG.FetchSM(
+        "database/", 
+        dates, 
+        uid="shibaji7", 
+        stations=["fcc", "brd", "ott"]
+    )
+    print(sm.sm_data.head())
+    date = dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
     rti = RangeTimePlot(
         range, 
         dates, 
-        title, 
+        date, 
         2,
         font="sans-sarif",
     )
-    ax = rti.addParamPlot(
-        rad, df, 
-        beam, "", 
-        p_max=30, p_min=-30,
-        xlabel="Time, UT", ylabel="Slant Range, km", 
-        zparam="v", label=r"Velocity, $ms^{-1}$",
-        cmap="Spectral", cbar=True, add_gflg=False,
-        yparam="srange", kind="scatter"
-    )
-    rti.overlay_eclipse_shadow(rad, beam, dates, ax, True)
-    ax.set_ylim(range)
-    ax.set_xlim(dates)
-    ax = rti.addParamPlot(
-        rad, df, 
-        beam, "", 
-        p_max=30, p_min=-30,
-        xlabel="Time, UT", ylabel="Maped Ground Range, km", 
-        zparam="v", label=r"Velocity, $ms^{-1}$",
-        cmap="Spectral", cbar=True, add_gflg=False,
-        yparam="Gn", kind="scatter"
-    )
-    ax.set_ylim(range[0]/2, range[1]/2)
-    ax.set_xlim(dates)
+    for rad_beam in rad_beams:
+        rad, beam = rad_beam[0], rad_beam[1]
+        title = fr"Rad: {rad} / Beam: {beam}"
+        radar = Radar(rad, dates, type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        if channel:
+            df = df[df.channel==channel]
+        df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
+        if tfreq: 
+            df = df[df.unique_tfreq==tfreq]
+        ax = rti.addParamPlot(
+            rad, df, 
+            beam, title=title,
+            p_max=30, p_min=-30,
+            xlabel="Time, UT", ylabel="Mapped GS Range, km", 
+            zparam="v", label=r"Velocity, $ms^{-1}$",
+            cmap="jet_r", cbar=True, add_gflg=False,
+            yparam="Chisham_gsmap", kind="scatter"
+        )
+        # rti.overlay_eclipse_shadow(rad, beam, dates, ax, True)
+        rti.add_conjugate_eclipse(rad, beam, dates, ax)
+        ax.set_ylim(range)
+        ax.set_xlim(dates)
+        o = sm.sm_data.copy()
+        o = o[o.iaga=="FCC"]
+        rti.add_supermag_TS(ax, o, "dB [FCC], nT", )
     rti.save(f"figures/rti.{rad}-{beam}.png")
     rti.close()
     return

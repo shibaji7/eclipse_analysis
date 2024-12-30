@@ -206,7 +206,10 @@ class SDCarto(GeoAxes):
         if out_extent_lats:
             print("some lats were out of extent ignored them")
 
-    def mark_longitudes(self, lon_arr=numpy.arange(-180, 180, 60), **kwargs):
+    def mark_longitudes(
+        self, lon_arr=numpy.arange(-180, 180, 60), 
+        tx=cartopy.crs.PlateCarree(), **kwargs
+    ):
         """
         mark the longitudes
         Write down the longitudes on the map for labeling!
@@ -219,66 +222,17 @@ class SDCarto(GeoAxes):
         else:
             if not isinstance(lon_arr, numpy.ndarray):
                 raise TypeError("lat_arr must either be a list or numpy array")
-        # get the boundaries
-        [x1, y1], [x2, y2] = self.viewLim.get_points()
-        bound_lim_arr = []
-        right_bound = LineString(([-x1, y1], [x2, y2]))
-        top_bound = LineString(([x1, -y1], [x2, y2]))
-        bottom_bound = LineString(([x1, y1], [x2, -y2]))
-        left_bound = LineString(([x1, y1], [-x2, y2]))
-        plot_outline = MultiLineString(
-            [right_bound, top_bound, bottom_bound, left_bound]
-        )
-        # get the plot extent, we"ll get an intersection
-        # to locate the ticks!
         plot_extent = self.get_extent(cartopy.crs.Geodetic())
-        line_constructor = lambda t, n, b: numpy.vstack(
-            (numpy.zeros(n) + t, numpy.linspace(b[2], b[3], n))
-        ).T
-        for t in lon_arr[:-1]:
-            xy = line_constructor(t, 30, plot_extent)
-            # print(xy)
-            proj_xyz = self.projection.transform_points(
-                cartopy.crs.Geodetic(), xy[:, 0], xy[:, 1]
-            )
-            xyt = proj_xyz[..., :2]
-            ls = LineString(xyt.tolist())
-            locs = plot_outline.intersection(ls)
-            if not locs:
-                continue
-            # we need to get the alignment right
-            # so get the boundary closest to the label
-            # and plot it!
-            closest_bound = min(
-                [
-                    right_bound.distance(locs),
-                    top_bound.distance(locs),
-                    bottom_bound.distance(locs),
-                    left_bound.distance(locs),
-                ]
-            )
-            if closest_bound == right_bound.distance(locs):
-                ha = "left"
-                va = "top"
-            elif closest_bound == top_bound.distance(locs):
-                ha = "left"
-                va = "bottom"
-            elif closest_bound == bottom_bound.distance(locs):
-                ha = "left"
-                va = "top"
-            else:
-                ha = "right"
-                va = "top"
-            if self.coords == "aacgmv2_mlt":
-                marker_text = str(int(t / 15.0))
-            else:
-                marker_text = r"$%s^{\circ}$" % str(t)
+        lat = plot_extent[2] if plot_extent[3] <= plot_extent[2] else plot_extent[3]
+        lat -= 20.
+        for t in lon_arr:
+            marker_text = r"$%s^{\circ}$" % str(t)
+            x, y = self.projection.transform_point(t, lat, src_crs=tx)
             self.text(
-                locs.bounds[0] + 0.02 * locs.bounds[0],
-                locs.bounds[1] + 0.02 * locs.bounds[1],
+                x, y,
                 marker_text,
-                ha=ha,
-                va=va,
+                ha="center",
+                va="center",
                 **kwargs,
                 alpha=0.5,
             )

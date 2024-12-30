@@ -47,7 +47,7 @@ class Fan(object):
         coord="geo",
         cb=True,
         central_longitude=120.0, central_latitude=-45.0,
-        extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10)
+        extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10),
     ):
         self.cb = cb
         self.rads = rads
@@ -68,6 +68,7 @@ class Fan(object):
             y=0.86,
             ha="left",
             fontweight="bold",
+            fontsize=8,
         )
         utils.setsize(12)
         return
@@ -92,8 +93,8 @@ class Fan(object):
             plot_date=self.date,
         )
         ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
-        plt_lons = np.arange(-180, 181, 15)
-        mark_lons = np.arange(-180, 181, 30)
+        plt_lons = np.arange(int(self.extent[0]/15)*15, int(self.extent[1]/15)*15, 15)
+        mark_lons = np.arange(int(self.extent[0]/30)*30, int(self.extent[1]/30)*30, 30)
         plt_lats = self.plt_lats
         ax.set_extent(self.extent, crs=cartopy.crs.PlateCarree())
         gl = ax.gridlines(crs=cartopy.crs.PlateCarree(), linewidth=0.2)
