@@ -19,7 +19,7 @@ from generate_plots import (
     create_rti_plots
 )
 
-methods = ["plot_fov"]
+methods = ["plot_rti"]
 setup()
 
 if "plot_fov" in methods:
@@ -40,7 +40,7 @@ if "plot_fov" in methods:
             ("ott", "mag", 45.4030, -75.5520), 
             ("brd", "mag", 49.8700, -99.9739),
             ("fcc", "mag", 58.7590, -94.0880),
-            #("fcc", "mag", 58.7590, -94.0880),
+            ("mhisr", "isr", 42.6, -(360-288.5)),
         ]
     )
 
@@ -70,10 +70,10 @@ if "download" in methods:
     )
 
 if "plot_rti" in methods:
-    rad_beams = [("pgr", 14)]
+    rad_beams = [("sas", 4)]
     yscale = "srange" 
     range = [0,4500]
     channel = None
     tfreq = None
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
-    create_rti_plots(rad_beams, dates, tfreq=tfreq, channel=channel)
+    create_rti_plots(rad_beams, dates, range=range, tfreq=tfreq, channel=channel)

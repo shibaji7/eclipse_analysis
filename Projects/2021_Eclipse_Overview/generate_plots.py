@@ -20,6 +20,11 @@ def setup():
     os.makedirs("figures", exist_ok=True)
     return
 
+def read_all_dataset(fname="dataset/mlh211205g.003.txt"):
+    with open(fname, "r") as f:
+        lines = f.read_lines()
+    return
+
 def generate_fov_overview(
     rads, date, beams=[15, 11, 7, 3, 0], 
     cb=True, central_longitude=120.0, central_latitude=-45.0,
@@ -131,7 +136,14 @@ def generate_conjugate_fov_overview(
             )
     if len(other_instruments):
         for o_inst in other_instruments:
-            ax.overlay_instument(o_inst[0], o_inst[2], o_inst[3])
+            if o_inst[1] == "isr":
+                ax.overlay_instument(
+                    o_inst[0], o_inst[2], o_inst[3], 
+                    marker="o", markerColor="b", font_color="b",
+                    xOffset=-5,yOffset=-1.5,
+                )
+            else:
+                ax.overlay_instument(o_inst[0], o_inst[2], o_inst[3])
     fan.save(f"figures/fanbeam.{hemi}.{date.strftime('%Y%m%d%H%M')}.png")
     fan.close() 
     return
@@ -172,10 +184,10 @@ def create_rti_plots(
             rad, df, 
             beam, title=title,
             p_max=30, p_min=-30,
-            xlabel="Time, UT", ylabel="Mapped GS Range, km", 
+            xlabel="Time, UT", ylabel="Slant Range, km", 
             zparam="v", label=r"Velocity, $ms^{-1}$",
             cmap="jet_r", cbar=True, add_gflg=False,
-            yparam="Chisham_gsmap", kind="scatter"
+            yparam="srange", kind="scatter"
         )
         # rti.overlay_eclipse_shadow(rad, beam, dates, ax, True)
         rti.add_conjugate_eclipse(rad, beam, dates, ax)
