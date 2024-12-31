@@ -131,9 +131,9 @@ class Fan(object):
 
     def generate_fov(
         self, rad, frame, beams=[], ax=None, 
-        maxGate=45, col="k", p_name="vel",
+        maxGate=70, col="k", p_name="v",
         p_max=30, p_min=-30, cmap="Spectral",
-        label="Velocity [m/s]", cb=True,
+        label="Velocity, m/s", eclipse_cb=False,
     ):
         """
         Generate plot with dataset overlaid
@@ -151,7 +151,7 @@ class Fan(object):
                 ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="r",
                 lineWidth=1.2) for b in beams
             ]
-        ax.overlay_eclipse(cb)
+        if eclipse_cb: ax.overlay_eclipse(eclipse_cb)
         return
 
     def generate_fovs(self, fds, beams=[], laytec=False):
@@ -160,7 +160,7 @@ class Fan(object):
         """
         ax = self.add_axes()
         for rad in self.rads:
-            self.generate_fov(rad, fds[rad].frame, beams, ax, laytec, col=fds[rad].color)
+            self.generate_fov(rad, fds[rad].df, beams, ax, laytec, col=fds[rad].color)
         return ax
 
     def overlay_fovs(self, rad, beams=[], ax=None, col="k"):

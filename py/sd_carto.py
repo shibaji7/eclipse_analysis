@@ -434,7 +434,7 @@ class SDCarto(GeoAxes):
         fovAlpha=0.2,
         zorder=1,
         lineColor="k",
-        lineWidth=0.4,
+        lineWidth=0.2,
         ls="-",
         model="IS",
         fov_dir="front",
@@ -456,22 +456,23 @@ class SDCarto(GeoAxes):
             sbeam = 0
         if "aacgm" in self.coords:
             latFull, lonFull = self.to_aagcms(latFull, lonFull)
+            
         xyz = self.projection.transform_points(tx, lonFull, latFull)
         x, y = xyz[:, :, 0], xyz[:, :, 1]
         contour_x = concatenate(
             (
-                x[sbeam, sgate:egate],
-                x[sbeam:ebeam, egate],
-                x[ebeam, egate:sgate:-1],
-                x[ebeam:sbeam:-1, sgate],
+                x[sbeam, :],
+                x[:, egate],
+                x[ebeam, ::-1],
+                x[::-1, sgate],
             )
         )
         contour_y = concatenate(
             (
-                y[sbeam, sgate:egate],
-                y[sbeam:ebeam, egate],
-                y[ebeam, egate:sgate:-1],
-                y[ebeam:sbeam:-1, sgate],
+                y[sbeam, :],
+                y[:, egate],
+                y[ebeam, ::-1],
+                y[::-1, sgate],
             )
         )
         self.plot(
@@ -481,7 +482,7 @@ class SDCarto(GeoAxes):
             zorder=zorder,
             linewidth=lineWidth,
             ls=ls,
-            alpha=0.6,
+            alpha=0.4,
         )
         if fovColor:
             contour = transpose(vstack((contour_x, contour_y)))
@@ -550,32 +551,32 @@ class SDCarto(GeoAxes):
             lons, lats = lons[Xb.ravel(), Yg.ravel()].reshape(Xb.shape), lats[
                 Xb.ravel(), Yg.ravel()
             ].reshape(Xb.shape)
-            lons, lats = ((lons+hdw.geographic.lon)/2, (lats+hdw.geographic.lat)/2)
+            # lons, lats = ((lons+hdw.geographic.lon)/2, (lats+hdw.geographic.lat)/2)
             XYZ = tx.transform_points(fm, lons, lats)
             Px = np.ma.masked_invalid(Px)
-            # im = self.scatter(
-            #     XYZ[:, :, 0],
-            #     XYZ[:, :, 1],
-            #     c=Px.T,
-            #     transform=tx,
-            #     cmap=cmap,
-            #     vmax=p_max,
-            #     vmin=p_min,
-            #     s=0.3,
-            #     marker="o",
-            #     alpha=0.9,
-            #     **kwargs,
-            # )
-            im = self.pcolormesh(
+            im = self.scatter(
                 XYZ[:, :, 0],
                 XYZ[:, :, 1],
-                Px.T,
-                vmax=p_max,
-                vmin=p_min,
+                c=Px.T,
                 transform=tx,
                 cmap=cmap,
-                zorder=2
+                vmax=p_max,
+                vmin=p_min,
+                s=0.3,
+                marker="s",
+                alpha=0.9,
+                **kwargs,
             )
+            # im = self.pcolormesh(
+            #     XYZ[:, :, 0],
+            #     XYZ[:, :, 1],
+            #     Px.T,
+            #     vmax=p_max,
+            #     vmin=p_min,
+            #     transform=tx,
+            #     cmap=cmap,
+            #     zorder=2
+            # )
             if cbar:
                 self._add_colorbar(im, label=label)
         return

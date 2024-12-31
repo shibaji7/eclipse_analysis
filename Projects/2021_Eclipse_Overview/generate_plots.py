@@ -8,6 +8,7 @@ from numpy import concatenate, ones, shape, transpose, vstack
 import cartopy
 from apexpy import Apex
 import pydarn
+import datetime as dt
         
 sys.path.append("py/")
 from fan import Fan
@@ -152,7 +153,6 @@ def create_rti_plots(
     rad_beams, dates, beam=15, yscale="Gn", 
     range=[0,2500], channel=None, tfreq=None
 ):
-
     from supermag import SuperMAG
     sm = SuperMAG.FetchSM(
         "database/", 
@@ -160,7 +160,6 @@ def create_rti_plots(
         uid="shibaji7", 
         stations=["fcc", "brd", "ott"]
     )
-    print(sm.sm_data.head())
     date = dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
     rti = RangeTimePlot(
         range, 
@@ -198,4 +197,60 @@ def create_rti_plots(
         rti.add_supermag_TS(ax, o, "dB [FCC], nT", )
     rti.save(f"figures/rti.{rad}-{beam}.png")
     rti.close()
+    return
+
+def create_fan_plots(
+    rads, dates, tfreq=None, channel=None, cb=False,
+    central_longitude=-120.0, central_latitude=60.0,
+    extent=[-150, -60, 45, 90], plt_lats = np.arange(45, 90, 15),
+    overlay_eclipse_other_hemi=True
+):
+    radars = dict()
+    for rad in rads:
+        radar = Radar(rad, dates, type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        if channel:
+            df = df[df.channel==channel]
+        df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
+        if tfreq: 
+            df = df[df.unique_tfreq==tfreq]
+        radar.df = df
+        radars[rad] = radar
+    
+    for date in dates:
+        fan = Fan(
+            rads, date, f"", cb=cb,
+            central_longitude=central_longitude, 
+            central_latitude=central_latitude, extent=extent,
+            plt_lats=plt_lats
+        )
+        ax = fan.add_axes()
+        for rad in rads:
+            o = radars[rad].df.copy()
+            o = o[
+                (o.time>=date)
+                & (o.time<=date+dt.timedelta(minutes=1))
+            ]
+            fan.generate_fov(rad, o, ax=ax)
+        apex = Apex(date)
+
+        ## map from other hemisphere
+        # lats, lons = np.arange(45, 90, 1), np.arange(-150, -70, 1)
+        # lats, lons = np.meshgrid(lats, lons)
+        # newglat, newglon, _ = apex.map_to_height(lats, lons, 100, 100, conjugate=True)
+        # print(newglat.max(), newglat.min(), newglon)
+        # p = utils.get_fov_eclipse(date, newglat, newglon)
+        # xyz = ax.projection.transform_points(cartopy.crs.PlateCarree(), lons, lats)
+        # x, y = xyz[:, :, 0], xyz[:, :, 1]
+        # im = ax.contourf(
+        #     x.T, y.T,
+        #     p.T,
+        #     cmap="Blues", alpha=0.6,
+        #     levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0],
+        #     transform=ax.projection
+        # )
+
+        fan.save(f"figures/{date.strftime('%Y%m%d%H%M')}.png")
+        fan.close()
     return

@@ -16,10 +16,11 @@ from generate_plots import (
     setup,
     generate_fov_overview,
     generate_conjugate_fov_overview,
-    create_rti_plots
+    create_rti_plots,
+    create_fan_plots,
 )
 
-methods = ["plot_rti"]
+methods = ["fan_plot"]
 setup()
 
 if "plot_fov" in methods:
@@ -77,3 +78,10 @@ if "plot_rti" in methods:
     tfreq = None
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     create_rti_plots(rad_beams, dates, range=range, tfreq=tfreq, channel=channel)
+
+if "fan_plot" in methods:
+    rads = ["sas"]
+    channel = None
+    tfreq = None
+    dates = [dt.datetime(2021,12,4,6,30), dt.datetime(2021,12,4,6,45), dt.datetime(2021,12,4,7,30)]
+    create_fan_plots(rads, dates, tfreq=tfreq, channel=channel)

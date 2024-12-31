@@ -248,6 +248,17 @@ def get_rti_eclipse(
             p[i,j] = e.create_eclipse_shadow(d, lat, lon, alt)
     return p
 
+def get_fov_eclipse(
+    date, lats, lons, alt=300
+):
+    from tqdm import tqdm
+    e = Eclipse()
+    p = np.nan * np.zeros_like(lats)
+    for i in tqdm(range(lats.shape[0])):
+        for j in tqdm(range(lats.shape[1])):
+            p[i,j] = e.create_eclipse_shadow(date, lats[i,j], lons[i,j], alt)
+    return p
+
 def get_w2naf_eclipse(
     date, alts=np.array([300]),
     lats=np.linspace(0,90,num=90*2),
