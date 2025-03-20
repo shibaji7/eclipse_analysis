@@ -18,9 +18,11 @@ from generate_plots import (
     generate_conjugate_fov_overview,
     create_rti_plots,
     create_fan_plots,
+    create_ISR_plots,
+    create_RTP_pydarn_plots,
 )
 
-methods = ["fan_plot"]
+methods = ["plot_fov"]
 setup()
 
 if "plot_fov" in methods:
@@ -29,11 +31,11 @@ if "plot_fov" in methods:
         ["fir"], dt.datetime(2021,12,4,7,30), cb=True,
     )
     generate_conjugate_fov_overview(
-        ["fir"], ["sas", "bks", "pgr"], dt.datetime(2021,12,4,7,30), cb=True,
+        ["fir"], ["sas"], dt.datetime(2021,12,4,7,30), cb=True,
         hemi="south"
     )
     generate_conjugate_fov_overview(
-        ["sas", "bks", "pgr"], ["fir"], dt.datetime(2021,12,4,7,30), cb=False,
+        ["sas"], ["fir"], dt.datetime(2021,12,4,7,30), cb=False,
         central_longitude=-120.0, central_latitude=50.0,
         extent=[-150, -60, 30, 90], plt_lats = np.arange(30, 90, 10),
         overlay_eclipse_other_hemi=True, hemi="north", 
@@ -78,6 +80,17 @@ if "plot_rti" in methods:
     tfreq = None
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     create_rti_plots(rad_beams, dates, range=range, tfreq=tfreq, channel=channel)
+    # import glob
+    
+    # for rad_beam in rad_beams:
+    #     rad, beam_num = rad_beam[0], rad_beam[1]
+
+    #     files = glob.glob(f"database/fitacf/{dates[0].strftime('%Y')}*")
+    #     fnames = []
+    #     for file in files:
+    #         if rad in file:
+    #             fnames.append(file)
+    #     create_RTP_pydarn_plots(fnames, dates, rad, beam_num,)
 
 if "fan_plot" in methods:
     rads = ["sas"]
@@ -85,3 +98,6 @@ if "fan_plot" in methods:
     tfreq = None
     dates = [dt.datetime(2021,12,4,6,30), dt.datetime(2021,12,4,6,45), dt.datetime(2021,12,4,7,30)]
     create_fan_plots(rads, dates, tfreq=tfreq, channel=channel)
+
+if "isr_plot" in methods:
+    create_ISR_plots()
