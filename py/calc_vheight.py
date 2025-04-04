@@ -130,3 +130,31 @@ def standard_virtual_height(target_range: float, cell_height: int = 300,
     # higher than 800 km
     else:
         return cell_height
+
+
+def gate2groundscatter(slant_range: float, hop: float, method: str="Thomas", **kwargs):
+    """
+    Calculate the ground scatter mapped range (km) for each slanted range
+    for SuperDARN data. This function is based on the Ground Scatter equation
+    discussed in the issue github.com/SuperDARN/pydarn/issues/257
+    Parameters
+    ----------
+        virtual_height: float
+            virtual height
+            default:  250
+        hop: float
+            hop number of returning data
+            default: 0.5
+
+    Returns
+    -------
+        ground_scatter_mapped_ranges : np.array
+            returns an array of ground scatter mapped ranges for the radar
+    """
+    virtual_height = chisham(slant_range)
+    num = - Re**2 - (Re + virtual_height)**2\
+        + (slant_ranges/2 * (0.5 / hop))**2
+    den = 2 * Re * (Re + virtual_height)
+    ground_scatter_mapped_ranges = (hop/0.5) * Re * np.arccos(- num / den)
+
+    return ground_scatter_mapped_ranges

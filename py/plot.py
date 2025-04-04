@@ -230,3 +230,41 @@ class RangeTimePlot(object):
             levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
         )
         return
+
+    def addParam(
+        self, df, title="", p_max=6e11, p_min=1e11, xlabel="Time, UT",
+        ylabel="Height, km", zparam="NE", label=r"Density, $m^{-3}$", cmap="gist_rainbow", 
+        yparam="GDALT", kind="sct"
+    ):
+        ax = self._add_axis()
+        X, Y, Z = utils.get_gridded_parameters(df, xparam="TIME", yparam=yparam, zparam=zparam, a_filter=False)
+        # Configure axes
+        ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+        hours = mdates.HourLocator(byhour=range(0, 24, 1))
+        ax.xaxis.set_major_locator(hours)
+        ax.set_xlabel(xlabel, fontdict={"size":12, "fontweight": "bold"})
+        ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
+        ax.set_ylim(0, self.nrang)
+        ax.set_ylabel(ylabel, fontdict={"size":12, "fontweight": "bold"})
+        ax.text(0.05, 0.9, title, ha="left", va="center", fontdict={"fontweight": "bold"}, transform=ax.transAxes)
+        if kind == "pmap":
+            im = ax.pcolor(
+                X, Y, Z.T, lw=0.3, edgecolors="None", cmap=cmap,
+                vmax=p_max, vmin=p_min, shading="nearest", zorder=3
+            )
+        else:
+            im = ax.scatter(
+                df["TIME"],
+                df[yparam],
+                c=df[zparam],
+                cmap=cmap,
+                vmax=p_max,
+                vmin=p_min,
+                s=200,
+                marker="s",
+                alpha=0.7,
+                zorder=3
+            )
+        ax.tick_params(direction="out", which="both")
+        self._add_colorbar(im, ax, cmap, label=label)
+        return

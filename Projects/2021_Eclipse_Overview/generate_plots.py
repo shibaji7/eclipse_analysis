@@ -9,6 +9,10 @@ import cartopy
 from apexpy import Apex
 import pydarn
 import datetime as dt
+from loguru import logger
+import bz2
+from pydarn import RangeEstimation
+import pandas as pd
         
 sys.path.append("py/")
 from fan import Fan
@@ -21,9 +25,42 @@ def setup():
     os.makedirs("figures", exist_ok=True)
     return
 
-def read_all_dataset(fname="dataset/mlh211205g.003.txt"):
+def read_all_isr_dataset(fname="database/mlh211203g.003.txt"):
     with open(fname, "r") as f:
-        lines = f.read_lines()
+        lines = f.readlines()
+    types = [
+        int, int, int, int, int, int, int, int, int, float,
+        float, float, float, float, float, float, float, float, 
+        float, float, float, float, float, float, float, float, 
+        float, float, float, float, float, float, float, float, float, 
+        float, float, float, float, float, float, float, float, float, 
+        float, float, float, float, float, float, float, float, float,
+        float, float, float, float, str, float, float, float, float, 
+        float, float, float, float, float
+    ]
+    headers = list(filter(None, lines[0].replace("\n", "").split(" ")))
+    df = []
+    for line in lines[1:]:
+        o = dict()
+        line = list(filter(None, line.replace("\n", "").split(" ")))
+        for t, d, h in zip(types, line, headers):
+            o[h] = t(d)
+        o["TIME"] = dt.datetime(o["YEAR"], o["MONTH"], o["DAY"], o["HOUR"], o["MIN"], o["SEC"])
+        df.append(o)
+    df = pd.DataFrame.from_records(df)
+    return df
+
+def create_ISR_plots():
+    df = read_all_isr_dataset()
+    df.NE = df.NE * (1+df.TR)
+    df["TE"] = df.TI/df.TR
+    print(df.head())
+    rti = RangeTimePlot(600, [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)], "MHISR / Gridded Dataset")
+    rti.addParam(df, xlabel="")
+    rti.addParam(df, xlabel="", zparam="VO", label=r"Velocity, $m/s$", p_max=100, p_min=-100, cmap="jet_r")
+    rti.addParam(df, xlabel="Time, UT", zparam="TE", label=r"$T_E$, $K$", p_max=1200, p_min=400, cmap="Reds")
+    rti.save("figures/rti.png")
+    rti.close()
     return
 
 def generate_fov_overview(
@@ -253,4 +290,28 @@ def create_fan_plots(
 
         fan.save(f"figures/{date.strftime('%Y%m%d%H%M')}.png")
         fan.close()
+    return
+
+def create_RTP_pydarn_plots(files, dates, rad, beam_num, channel="all", parameter="v"):
+    import matplotlib.pyplot as plt
+    import pydarn
+
+    records = []
+    files.sort()
+    for f in files:
+        logger.info(f"Reading file: {f}")
+        with bz2.open(f) as fp:
+            reader = pydarn.SuperDARNRead(fp.read(), True)
+            records += reader.read_fitacf()
+    pydarn.RTP.plot_range_time(
+        records, parameter,
+        beam_num, channel, ax=None,
+        zmin=-30, zmax=30,
+        start_time=dates[0], end_time=dates[1],
+        ymin = None, ymax = None, yspacing = 200,
+        range_estimation = RangeEstimation.SLANT_RANGE,
+        colorbar_label= 'Doppler, m/s', date_fmt = '%H:%M',
+        round_start = True
+    )
+    plt.savefig(f"figures/{rad}_{beam_num}.png")
     return

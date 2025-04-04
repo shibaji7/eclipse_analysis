@@ -77,6 +77,11 @@ class Radar(object):
         self.calculate_decay_rate()
         return
 
+    def compute_recalculations(self, vheight_model="standard_model", gsmap_model=""):
+        logger.info("Calculate v-Height...")
+        
+        return
+
     def calculate_vheight(self, n_hop):
         if self.rad == "fir": self.df.frang = 0.
         self.df["srange"] = self.df.frang + (self.df.rsep * self.df.slist)
