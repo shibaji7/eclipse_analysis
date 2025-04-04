@@ -22,7 +22,7 @@ from generate_plots import (
     create_RTP_pydarn_plots,
 )
 
-methods = ["plot_rti"]
+methods = ["fan_plot"]
 setup()
 
 if "plot_fov" in methods:
@@ -31,11 +31,11 @@ if "plot_fov" in methods:
         ["fir"], dt.datetime(2021,12,4,7,30), cb=True,
     )
     generate_conjugate_fov_overview(
-        ["fir"], ["sas", "bks", "pgr"], dt.datetime(2021,12,4,7,30), cb=True,
+        ["fir"], ["sas"], dt.datetime(2021,12,4,7,30), cb=True,
         hemi="south"
     )
     generate_conjugate_fov_overview(
-        ["sas", "bks", "pgr"], ["fir"], dt.datetime(2021,12,4,7,30), cb=False,
+        ["sas"], ["fir"], dt.datetime(2021,12,4,7,30), cb=False,
         central_longitude=-120.0, central_latitude=50.0,
         extent=[-150, -60, 30, 90], plt_lats = np.arange(30, 90, 10),
         overlay_eclipse_other_hemi=True, hemi="north", 
