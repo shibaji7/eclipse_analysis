@@ -97,12 +97,13 @@ if "fan_plot" in methods:
     rads = ["fir"]
     channel = 1
     tfreq = None
-    dates = [dt.datetime(2021,12,4,6),dt.datetime(2021,12,4,6,30),dt.datetime(2021,12,4,7), dt.datetime(2021,12,4,7,30), dt.datetime(2021,12,4,8),
+    dates = [dt.datetime(2021,12,4,6)
+             ,dt.datetime(2021,12,4,6,30),dt.datetime(2021,12,4,7), dt.datetime(2021,12,4,7,30), dt.datetime(2021,12,4,8),
              dt.datetime(2021,12,4,8, 30), dt.datetime(2021,12,4,9), dt.datetime(2021,12,4,9, 30),
              dt.datetime(2021,12,4,10)]
     create_fan_plots(
         rads, dates, tfreq=tfreq, channel=channel,
-        central_longitude=-90.0, central_latitude=-60.0,
-    extent=[40, 120, -90, -45], plt_lats = np.arange(-90, -45, 10), 
-    p_min=-30, p_max=30, mark_lon=60
+        central_longitude=100, central_latitude=-60.0,
+    extent=[-40, -100, -90, -50], plt_lats = np.arange(-90, -50, 10), 
+    p_min=-30, p_max=30, mark_lon=-50, xOffset=5, yOffset=-1.5, 
     )

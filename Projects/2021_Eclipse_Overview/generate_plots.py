@@ -243,7 +243,7 @@ def create_fan_plots(
     extent=[60, 130, -90, -45], plt_lats = np.arange(-90, -45, 10),
     overlay_eclipse_other_hemi=False,
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)"],
-    p_max=500, p_min=200, mark_lon=120
+    p_max=500, p_min=200, mark_lon=120, yOffset=5, xOffset=-5,
 ):
     radars = dict()
     for rad in rads:
@@ -278,7 +278,8 @@ def create_fan_plots(
                 (o.time>=date)
                 & (o.time<=date+dt.timedelta(minutes=1))
             ]
-            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=p_max, p_min=p_min)
+            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=p_max, p_min=p_min,
+                             xOffset=5, yOffset=-1.5,)
         ax.text(0.05, 0.95, tags[j], ha="left", va="top", transform=ax.transAxes,)
         # apex = Apex(date)
 

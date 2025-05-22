@@ -22,7 +22,7 @@ from generate_plots import (
     create_RTP_pydarn_plots,
 )
 
-methods = ["fan_plot", ""]
+methods = ["fan_plot", "plot_fov", "plot_rti"]
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere

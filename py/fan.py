@@ -98,7 +98,10 @@ class Fan(object):
         )
         ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
         # plt_lons = np.arange(int(self.extent[0]/15)*15, int((self.extent[1]+10)/15)*15, 15)
-        mark_lons = np.arange(int(self.extent[0]/30)*30, int((self.extent[1]+10)/30)*30, 30)
+        if self.extent[0] < self.extent[1]:
+            mark_lons = np.arange(int(self.extent[0]/30)*30, int((self.extent[1]+10)/30)*30, 30)
+        else:
+            mark_lons = np.arange(int(self.extent[1]/30)*30, int((self.extent[0]+10)/30)*30, 30)
         plt_lons = np.arange(-180, 180, 30)
         #mark_lons = np.arange(-180, 180, 10)
         plt_lats = self.plt_lats
@@ -151,12 +154,13 @@ class Fan(object):
         maxGate=70, col="k", p_name="v",
         p_max=30, p_min=-30, cmap="Spectral",
         label="Velocity, m/s", eclipse_cb=False, cbar=True,
+        yOffset=5, xOffset=-5,
     ):
         """
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color=col, yOffset=5, xOffset=-5, markerColor=col, fontSize=8)
+        ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
         ax.overlay_fov(rad, lineColor=col)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 

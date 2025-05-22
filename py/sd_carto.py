@@ -388,8 +388,8 @@ class SDCarto(GeoAxes):
         from cartopy.feature.nightshade import Nightshade
         self.add_feature(Nightshade(self.plot_date, alpha=0.2))
         alts = np.array([100])
-        lats = np.linspace(-90, 90, num=181)
-        lons = np.linspace(-180, 180, num=181)
+        lats = np.linspace(-90, 90, num=int(181*4))
+        lons = np.linspace(-180, 180, num=int(181*4))
         p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
         p = np.ma.masked_invalid(p)[0,0,:,:]
         obs = np.copy(p)
@@ -399,20 +399,21 @@ class SDCarto(GeoAxes):
             lats,
             obs,
             transform=cartopy.crs.PlateCarree(),
-            cmap="Blues", alpha=0.6,
+            cmap="gray_r", alpha=0.4,
             levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0],
             zorder=1,
         )
         obs = np.copy(p)
         obs[obs<=1.] = np.nan
-        self.contourf(
+        self.pcolormesh(
             lons,
             lats,
             obs,
             transform=cartopy.crs.PlateCarree(), 
-            cmap="gray_r",
-            alpha=0.3,
-            levels=[1.0, 2.0],
+            cmap="gray",
+            alpha=0.8, shading="nearest",
+            lw=0.0,
+            # levels=[1.0, 2.0],
             zorder=1
         )
         # if cb: _add_colorbar(fig, ax, im)
