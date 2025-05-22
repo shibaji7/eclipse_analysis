@@ -243,6 +243,7 @@ def create_fan_plots(
     extent=[60, 130, -90, -45], plt_lats = np.arange(-90, -45, 10),
     overlay_eclipse_other_hemi=False,
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)"],
+    p_max=500, p_min=200, mark_lon=120
 ):
     radars = dict()
     for rad in rads:
@@ -254,6 +255,9 @@ def create_fan_plots(
         df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
         if tfreq: 
             df = df[df.unique_tfreq==tfreq]
+        v, tf = np.array(df.v), np.array(df.unique_tfreq)
+        v[tf==10.5] *= -1
+        df.v = v
         radar.df = df
         radars[rad] = radar
     
@@ -261,7 +265,8 @@ def create_fan_plots(
         rads, dates[0], f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
-        plt_lats=plt_lats, nrows=3, ncols=3,sup_title=False
+        plt_lats=plt_lats, nrows=3, ncols=3,sup_title=False,
+        mark_lon=mark_lon
     )
     for j, date in enumerate(dates):
         utils.setsize(12)
@@ -273,7 +278,7 @@ def create_fan_plots(
                 (o.time>=date)
                 & (o.time<=date+dt.timedelta(minutes=1))
             ]
-            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=500, p_min=200)
+            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=p_max, p_min=p_min)
         ax.text(0.05, 0.95, tags[j], ha="left", va="top", transform=ax.transAxes,)
         # apex = Apex(date)
 

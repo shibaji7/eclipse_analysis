@@ -49,7 +49,7 @@ class Fan(object):
         cb=True,
         central_longitude=120.0, central_latitude=-45.0,
         extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10),
-        sup_title=True
+        sup_title=True, mark_lon=120,
     ):
         self.cb = cb
         self.rads = rads
@@ -62,6 +62,7 @@ class Fan(object):
         self.central_latitude = central_latitude
         self.plt_lats = plt_lats
         self.extent = extent
+        self.mark_lon = mark_lon
         if sup_title:
             plt.suptitle(
                 f"{self.date_string()} / {fig_title}"
@@ -108,7 +109,7 @@ class Fan(object):
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
         gl.n_steps = 90
-        ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k", lon_location=120)
+        ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k", lon_location=self.mark_lon)
         ax.mark_longitudes(mark_lons, fontsize="xx-small", color="k")
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()

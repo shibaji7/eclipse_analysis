@@ -111,7 +111,7 @@ class RangeTimePlot(object):
         fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
         glat, glon = fov[0][:101, beam], fov[1][:101, beam]
         p = utils.get_rti_eclipse(ddates, glat, glon)
-        srange = (45 * np.arange(hdw.gates+1))
+        srange = (45 * np.arange(p.shape[1]))
         obs = np.copy(p)
         # obs[obs>1.] = np.nan
         print(obs.shape, len(ddates), len(srange))
