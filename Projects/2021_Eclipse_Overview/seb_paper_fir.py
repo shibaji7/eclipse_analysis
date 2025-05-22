@@ -23,12 +23,12 @@ from generate_plots import (
 )
 
 methods = [
-#    "plot_rti", 
-    "fan_plot",
+   "plot_rti", 
+    # "fan_plot",
 ]
 
 
-def plotr(rad_beams, fname, dates, range, yscale):
+def plotr(rad_beams, fname, dates, range, yscale, xlabel_index=0, esj=0, cbj=0, dx=0.2):
     ftitle =  fr"Rad: fir / "+\
             dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
     rti = RangeTimePlot(
@@ -41,11 +41,11 @@ def plotr(rad_beams, fname, dates, range, yscale):
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)"]
     for j, rad_beam in enumerate(rad_beams):
         rad, beam = rad_beam["rad"], rad_beam["beam"]
-        title = fr"{tags[j]} Beam: {beam} / Ch: {rad_beam['channel']} / $f_0$= {rad_beam['tfreq'] if rad_beam['tfreq'] else 'all'}"
+        title = fr"{tags[j]} Beam: {beam} / Ch: {rad_beam['channel']} / $f_0$= {str(rad_beam['tfreq'])+' MHz' if rad_beam['tfreq'] else 'all'}"
         radar = Radar(rad, dates, type="fitacf")
         radar.calculate_ground_range()
         df = radar.df.copy()
-        df.srange /= 2
+        # df.srange /= 2
         logger.info(f"Reading radar: {rad} / Beam: {beam} / Unique: {df.tfreq.unique()}, {df.channel.unique()}, {df.bmnum.unique()}")
         if rad_beam["channel"]:
             df = df[df.channel==rad_beam["channel"]]
@@ -59,12 +59,12 @@ def plotr(rad_beams, fname, dates, range, yscale):
             rad, df, 
             beam, title=title,
             p_max=30, p_min=-30,
-            xlabel="Time, UT" if j==3 else "", ylabel=r"$\frac{1}{2}$-Slant Range, km", 
+            xlabel="Time, UT" if j==xlabel_index else "", ylabel=r"Slant Range, km", 
             zparam="v", label=r"Velocity, $ms^{-1}$",
-            cmap="Spectral", cbar=j==0, add_gflg=False,
+            cmap="Spectral", cbar=j==cbj, add_gflg=False,
             yparam=yscale, kind="scatter"
         )
-        rti.overlay_eclipse_shadow(rad, beam, dates, ax, j==2, dx=0.05)
+        rti.overlay_eclipse_shadow(rad, beam, dates, ax, j==esj, dx=dx)
         # rti.add_conjugate_eclipse(rad, beam, dates, ax)
         ax.set_ylim(range)
         ax.set_xlim(dates)
@@ -72,24 +72,23 @@ def plotr(rad_beams, fname, dates, range, yscale):
     rti.close()
 
 if "plot_rti" in methods:
-    rad_beams = [
-        dict(rad="fir", beam=3, channel=2, tfreq=None),
-        dict(rad="fir", beam=7, channel=2, tfreq=None),
-        dict(rad="fir", beam=11, channel=2, tfreq=None),
-        dict(rad="fir", beam=15, channel=2, tfreq=None)
-    ]
     yscale = "srange" 
-    range = [0,2500]
+    range = [0,4500]
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
-    plotr(rad_beams, f"figures_2021/rti.fir-15-2-all.png", dates, range, yscale)
+    rad_beams = [
+        dict(rad="fir", beam=11, channel=2, tfreq=10.5),
+        dict(rad="fir", beam=11, channel=2, tfreq=12),
+        dict(rad="fir", beam=11, channel=2, tfreq=13.5),
+        dict(rad="fir", beam=11, channel=2, tfreq=15.5)
+    ]
+    plotr(rad_beams, f"figures_2021/rti.fir-11-2-all.png", dates, range, yscale, xlabel_index=3, esj=3, cbj=0, dx=0.05)
 
     rad_beams = [
-        dict(rad="fir", beam=7, channel=2, tfreq=10.5),
+        dict(rad="fir", beam=3, channel=2, tfreq=10.5),
         dict(rad="fir", beam=7, channel=2, tfreq=12),
-        dict(rad="fir", beam=7, channel=2, tfreq=13.5),
-        dict(rad="fir", beam=7, channel=2, tfreq=15.5)
+        dict(rad="fir", beam=15, channel=2, tfreq=10.5),
     ]
-    plotr(rad_beams, f"figures_2021/rti.fir-7-2-individual.png", dates, range, yscale)
+    plotr(rad_beams, f"figures_2021/rti.fir-7-2-individual.png", dates, range, yscale, xlabel_index=2, esj=2, cbj=0, dx=0.05)
     
 
 

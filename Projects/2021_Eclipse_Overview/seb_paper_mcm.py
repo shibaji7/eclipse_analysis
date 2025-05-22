@@ -37,7 +37,7 @@ if "plot_rti" in methods:
         dict(rad="mcm", beam=15, channel=None, tfreq=None)
     ]
     yscale = "srange" 
-    range = [0,3000]
+    range = [0,3500]
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     
     
@@ -53,7 +53,7 @@ if "plot_rti" in methods:
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)"]
     for j, rad_beam in enumerate(rad_beams):
         rad, beam = rad_beam["rad"], rad_beam["beam"]
-        title = fr"{tags[j]} Beam: {beam}"
+        
         radar = Radar(rad, dates, type="fitacf")
         radar.calculate_ground_range()
         df = radar.df.copy()
@@ -61,6 +61,7 @@ if "plot_rti" in methods:
         if rad_beam["channel"]:
             df = df[df.channel==rad_beam["channel"]]
         df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
+        title = title = fr"{tags[j]} Beam: {beam} / Ch: 1 / $f_0$={df.unique_tfreq.iloc[0]} MHz"
         if rad_beam["tfreq"]: 
             df = df[df.unique_tfreq==rad_beam["tfreq"]]
         ax = rti.addParamPlot(
