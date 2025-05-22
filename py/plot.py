@@ -3,8 +3,8 @@ plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans",
                                    "Lucida Grande", "Verdana"]
 
-import mplstyle
-
+#import mplstyle
+import scienceplots
 import matplotlib as mpl
 
 import pandas as pd
@@ -58,14 +58,14 @@ class RangeTimePlot(object):
         if add_gflg:
             Xg, Yg, Zg = utils.get_gridded_parameters(df, xparam="time", yparam=yparam, zparam="gflg")
         # Configure axes
-        ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+        ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
         hours = mdates.HourLocator(byhour=range(0, 24, 1))
         ax.xaxis.set_major_locator(hours)
-        ax.set_xlabel(xlabel, fontdict={"size":12, "fontweight": "bold"})
+        ax.set_xlabel(xlabel, fontdict={"size":12})
         ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
         # ax.set_ylim(self.nrang)
-        ax.set_ylabel(ylabel, fontdict={"size":12, "fontweight": "bold"})
-        ax.text(0.05, 0.9, title, ha="left", va="center", fontdict={"fontweight": "bold"}, transform=ax.transAxes)
+        ax.set_ylabel(ylabel, fontdict={"size":12})
+        ax.text(0.95, 0.95, title, ha="right", va="top", transform=ax.transAxes)
         if add_gflg:
             Zx = np.ma.masked_where(Zg==0, Zg)
             ax.pcolormesh(Xg, Yg, Zx.T, lw=0.01, edgecolors="None", cmap="gray",
@@ -87,8 +87,8 @@ class RangeTimePlot(object):
                     cmap=cmap,
                     vmax=p_max,
                     vmin=p_min,
-                    s=0.1,
-                    marker="D",
+                    s=2,
+                    marker="s",
                     alpha=1.0,
                     zorder=3
                 )
@@ -101,7 +101,7 @@ class RangeTimePlot(object):
             t_ax = self.overlay_omni(ax, omni)
             return ax, t_ax
             
-    def overlay_eclipse_shadow(self, rad, beam, dates, ax, eclipse_cbar):
+    def overlay_eclipse_shadow(self, rad, beam, dates, ax, eclipse_cbar, dx=0.2):
         ddates = [
             dates[0]+dt.timedelta(minutes=i) 
             for i in range(int((dates[1]-dates[0]).total_seconds()/60))
@@ -111,24 +111,25 @@ class RangeTimePlot(object):
         fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
         glat, glon = fov[0][:101, beam], fov[1][:101, beam]
         p = utils.get_rti_eclipse(ddates, glat, glon)
-        srange = (45 * np.arange(101))
+        srange = (45 * np.arange(hdw.gates+1))
         obs = np.copy(p)
         # obs[obs>1.] = np.nan
+        print(obs.shape, len(ddates), len(srange))
         im = ax.contourf(
             ddates,
             srange,
             obs.T,
-            cmap="Blues", alpha=0.6,
+            cmap="gray_r", alpha=0.4,
             levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
         )
         obs = np.copy(p)
         obs[obs<=1.] = np.nan
         ax.pcolormesh(
             ddates, srange, obs.T, lw=0.01, edgecolors="None", cmap="gray_r",
-            vmax=1, vmin=0, shading="nearest", alpha=0.4, zorder=1
+            vmax=1, vmin=0, shading="nearest", alpha=0.8, zorder=1
         )
         if eclipse_cbar:
-            self._add_colorbar(im, ax, "Blues", label="Obscuration", dx=0.15)
+            self._add_colorbar(im, ax, "gray_r", label="Obscuration", dx=dx)
         return
     
     def overlay_omni(self, ax, omni):
@@ -154,17 +155,17 @@ class RangeTimePlot(object):
         ax = self.fig.add_subplot(self.num_subplots, 1, self._num_subplots_created)
         ax.tick_params(axis="both", labelsize=12)
         if self._num_subplots_created == 1:
-            ax.text(0.05, 1.05, self.fig_title, ha="left", va="center", transform=ax.transAxes, fontdict=dict(size=15, weight="bold"))
+            ax.text(0.05, 1.05, self.fig_title, ha="left", va="center", transform=ax.transAxes, fontdict=dict(size=15))
         return ax
 
     def save(self, filepath):
-        self.fig.savefig(filepath, bbox_inches="tight")
+        self.fig.savefig(filepath, bbox_inches="tight", dpi=1000)
 
     def close(self):
         self.fig.clf()
         plt.close()
 
-    def _add_colorbar(self, im, ax, colormap, label="", dx=0.15):
+    def _add_colorbar(self, im, ax, colormap, label="", dx=0.05):
         """
         Add a colorbar to the right of an axis.
         :param fig:

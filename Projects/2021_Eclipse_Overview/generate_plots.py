@@ -64,7 +64,7 @@ def create_ISR_plots():
     return
 
 def generate_fov_overview(
-    rads, date, beams=[15, 11, 7, 3, 0], 
+    rads, date, beams=[15, 11, 7, 3], 
     cb=True, central_longitude=120.0, central_latitude=-45.0,
     extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10)
 ):
@@ -75,9 +75,9 @@ def generate_fov_overview(
         plt_lats=plt_lats
     )
     ax = fan.add_axes()
-    for rad in rads:
-        fan.overlay_fovs(rad,beams=beams,ax=ax)
-    fan.save(f"figures/fanbeam.{date.strftime('%Y%m%d%H%M')}.png")
+    for rad, col in zip(rads, ["r", "b"]):
+        fan.overlay_fovs(rad,beams=beams if rad=="fir" else [],ax=ax, col=col)
+    fan.save(f"figures_2021/fanbeam.{date.strftime('%Y%m%d%H%M')}.png")
     fan.close() 
     return
 
@@ -190,13 +190,13 @@ def create_rti_plots(
     rad_beams, dates, beam=15, yscale="Gn", 
     range=[0,2500], channel=None, tfreq=None
 ):
-    from supermag import SuperMAG
-    sm = SuperMAG.FetchSM(
-        "database/", 
-        dates, 
-        uid="shibaji7", 
-        stations=["fcc", "brd", "ott"]
-    )
+    # from supermag import SuperMAG
+    # sm = SuperMAG.FetchSM(
+    #     "database/", 
+    #     dates, 
+    #     uid="shibaji7", 
+    #     stations=["fcc", "brd", "ott"]
+    # )
     date = dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
     rti = RangeTimePlot(
         range, 
@@ -211,6 +211,7 @@ def create_rti_plots(
         radar = Radar(rad, dates, type="fitacf")
         radar.calculate_ground_range()
         df = radar.df.copy()
+        logger.info(f"Reading radar: {rad} / Beam: {beam} / Unique: {df.tfreq.unique()}, {df.channel.unique()}, {df.bmnum.unique()}")
         if channel:
             df = df[df.channel==channel]
         df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
@@ -229,18 +230,19 @@ def create_rti_plots(
         rti.add_conjugate_eclipse(rad, beam, dates, ax)
         ax.set_ylim(range)
         ax.set_xlim(dates)
-        o = sm.sm_data.copy()
-        o = o[o.iaga=="FCC"]
-        rti.add_supermag_TS(ax, o, "dB [FCC], nT", )
-    rti.save(f"figures/rti.{rad}-{beam}.png")
+        # o = sm.sm_data.copy()
+        # o = o[o.iaga=="FCC"]
+        # rti.add_supermag_TS(ax, o, "dB [FCC], nT", )
+    rti.save(f"figures_2021/rti.{rad}-{beam}.png")
     rti.close()
     return
 
 def create_fan_plots(
     rads, dates, tfreq=None, channel=None, cb=False,
-    central_longitude=-120.0, central_latitude=60.0,
-    extent=[-150, -60, 45, 90], plt_lats = np.arange(45, 90, 15),
-    overlay_eclipse_other_hemi=True
+    central_longitude=80.0, central_latitude=-60.0,
+    extent=[60, 130, -90, -45], plt_lats = np.arange(-90, -45, 10),
+    overlay_eclipse_other_hemi=False,
+    tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)"],
 ):
     radars = dict()
     for rad in rads:
@@ -255,22 +257,25 @@ def create_fan_plots(
         radar.df = df
         radars[rad] = radar
     
-    for date in dates:
-        fan = Fan(
-            rads, date, f"", cb=cb,
-            central_longitude=central_longitude, 
-            central_latitude=central_latitude, extent=extent,
-            plt_lats=plt_lats
-        )
-        ax = fan.add_axes()
+    fan = Fan(
+        rads, dates[0], f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats, nrows=3, ncols=3,sup_title=False
+    )
+    for j, date in enumerate(dates):
+        utils.setsize(12)
+        fan.date = date
+        ax = fan.add_axes(add_coords=j==0, add_time=True)
         for rad in rads:
             o = radars[rad].df.copy()
             o = o[
                 (o.time>=date)
                 & (o.time<=date+dt.timedelta(minutes=1))
             ]
-            fan.generate_fov(rad, o, ax=ax)
-        apex = Apex(date)
+            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=500, p_min=200)
+        ax.text(0.05, 0.95, tags[j], ha="left", va="top", transform=ax.transAxes,)
+        # apex = Apex(date)
 
         ## map from other hemisphere
         # lats, lons = np.arange(45, 90, 1), np.arange(-150, -70, 1)
@@ -287,9 +292,9 @@ def create_fan_plots(
         #     levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0],
         #     transform=ax.projection
         # )
-
-        fan.save(f"figures/{date.strftime('%Y%m%d%H%M')}.png")
-        fan.close()
+    fan.fig.subplots_adjust(hspace=0.1, wspace=0.1)
+    fan.save(f"figures_2021/{date.strftime('%Y%m%d%H%M')}.png")
+    fan.close()
     return
 
 def create_RTP_pydarn_plots(files, dates, rad, beam_num, channel="all", parameter="v"):

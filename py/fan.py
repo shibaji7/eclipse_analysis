@@ -18,7 +18,8 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-import mplstyle
+#import mplstyle
+import scienceplots
 
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans", "Lucida Grande", "Verdana"]
@@ -48,6 +49,7 @@ class Fan(object):
         cb=True,
         central_longitude=120.0, central_latitude=-45.0,
         extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10),
+        sup_title=True
     ):
         self.cb = cb
         self.rads = rads
@@ -60,20 +62,21 @@ class Fan(object):
         self.central_latitude = central_latitude
         self.plt_lats = plt_lats
         self.extent = extent
-        plt.suptitle(
-            f"{self.date_string()} / {fig_title}"
-            if fig_title
-            else f"{self.date_string()}",
-            x=0.2,
-            y=0.86,
-            ha="left",
-            fontweight="bold",
-            fontsize=8,
-        )
+        if sup_title:
+            plt.suptitle(
+                f"{self.date_string()} / {fig_title}"
+                if fig_title
+                else f"{self.date_string()}",
+                x=0.2,
+                y=0.86,
+                ha="left",
+                fontweight="bold",
+                fontsize=8,
+            )
         utils.setsize(12)
         return
 
-    def add_axes(self):
+    def add_axes(self, add_coords=True, add_time=False):
         """
         Instatitate figure and axes labels
         """
@@ -93,8 +96,10 @@ class Fan(object):
             plot_date=self.date,
         )
         ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
-        plt_lons = np.arange(int(self.extent[0]/15)*15, int(self.extent[1]/15)*15, 15)
-        mark_lons = np.arange(int(self.extent[0]/30)*30, int(self.extent[1]/30)*30, 30)
+        # plt_lons = np.arange(int(self.extent[0]/15)*15, int((self.extent[1]+10)/15)*15, 15)
+        mark_lons = np.arange(int(self.extent[0]/30)*30, int((self.extent[1]+10)/30)*30, 30)
+        plt_lons = np.arange(-180, 180, 30)
+        #mark_lons = np.arange(-180, 180, 10)
         plt_lats = self.plt_lats
         ax.set_extent(self.extent, crs=cartopy.crs.PlateCarree())
         gl = ax.gridlines(crs=cartopy.crs.PlateCarree(), linewidth=0.2)
@@ -103,20 +108,31 @@ class Fan(object):
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
         gl.n_steps = 90
-        ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k")
+        ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k", lon_location=120)
         ax.mark_longitudes(mark_lons, fontsize="xx-small", color="k")
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()
-        ax.text(
-            -0.02,
-            0.99,
-            "Coord: Geo",
-            ha="center",
-            va="top",
-            transform=ax.transAxes,
-            fontsize="xx-small",
-            rotation=90,
-        )
+        if add_coords:
+            ax.text(
+                -0.02,
+                0.99,
+                "Coord: Geo",
+                ha="center",
+                va="top",
+                transform=ax.transAxes,
+                fontsize="small",
+                rotation=90,
+            )
+        if add_time:
+            ax.text(
+                0.99,
+                0.99,
+                self.date_string(),
+                ha="right",
+                va="top",
+                transform=ax.transAxes,
+                fontsize="small",
+            )
         ax.overaly_eclipse_path(lineWidth=0.2)
         ax.overlay_eclipse(self.cb)
         return ax
@@ -133,18 +149,18 @@ class Fan(object):
         self, rad, frame, beams=[], ax=None, 
         maxGate=70, col="k", p_name="v",
         p_max=30, p_min=-30, cmap="Spectral",
-        label="Velocity, m/s", eclipse_cb=False,
+        label="Velocity, m/s", eclipse_cb=False, cbar=True,
     ):
         """
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color=col)
+        ax.overlay_radar(rad, font_color=col, yOffset=5, xOffset=-5, markerColor=col, fontSize=8)
         ax.overlay_fov(rad, lineColor=col)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 
             p_name=p_name, p_max=p_max, p_min=p_min,
-            cmap=cmap, label=label
+            cmap=cmap, label=label, cbar=cbar,
         )
         if beams and len(beams) > 0:
             [
@@ -168,15 +184,19 @@ class Fan(object):
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color=col)
-        ax.overlay_fov(rad, lineColor=col)
+        ax.overlay_radar(rad, font_color=col, markerColor=col)
+        ax.overlay_fov(rad, lineColor=col, maxGate=75)
         if beams and len(beams) > 0:
-            [ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="m",
-                lineWidth=0.3) for b in beams]
+            for b in beams:
+                ax.overlay_fov(
+                    rad, beamLimits=[b, b + 1], 
+                    maxGate=75,  ls="-", 
+                    lineColor="m", lineWidth=0.3
+                )
         return ax
 
     def save(self, filepath):
-        self.fig.savefig(filepath, bbox_inches="tight", facecolor=(1, 1, 1, 1))
+        self.fig.savefig(filepath, bbox_inches="tight", facecolor=(1, 1, 1, 1), dpi=1000)
         return
 
     def close(self):

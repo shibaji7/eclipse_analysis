@@ -3,7 +3,7 @@
     level dataset.
 """
 
-import mplstyle
+#import mplstyle
 
 import os
 import pandas as pd
@@ -121,6 +121,7 @@ class Radar(object):
         logger.info(f"Setup radar: {self.rad}")
         date = self.dates[0].strftime("%Y%m%d")
         self.files = glob.glob(f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{date}.*")
+        self.files = glob.glob(f"/home/chakras4/Research/Backup_CodeBase/2021_Datasets/{date}.*{self.rad}.*")
         # self.files = glob.glob(f"database/{self.type}/*{self.rad}.*")
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
@@ -148,6 +149,7 @@ class Radar(object):
                     records += reader.read_fitacf()
             if len(records)>0:
                 self.__tocsv__(records)
+        print(f"Dataframe: {self.df.shape}")
         if "lat" not in self.df.columns:
             self.df.tfreq = np.round(np.array(self.df.tfreq)/1e3, 1)
             # self.update_location_details()
@@ -335,8 +337,9 @@ if __name__ == "__main__":
     # Radar("fhw", dates, type="fitacf")
     # Radar("cve", dates, type="fitacf")
     # Radar("cvw", dates, type="fitacf")
-    # dates = [dt.datetime(2021,12,2), dt.datetime(2021,12,7)]
-    # Radar("fir", dates, type="fitacf")
+    dates = [dt.datetime(2021,12,4), dt.datetime(2021,12,5)]
+    Radar("fir", dates, type="fitacf")
+    Radar("mcm", dates, type="fitacf")
     # dates = [dt.datetime(2017,5,27), dt.datetime(2017,5,28)]
     # Radar("bks", dates, type="fitacf")
     # Radar("fhe", dates, type="fitacf")

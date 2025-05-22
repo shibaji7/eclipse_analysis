@@ -400,7 +400,8 @@ class SDCarto(GeoAxes):
             obs,
             transform=cartopy.crs.PlateCarree(),
             cmap="Blues", alpha=0.6,
-            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0],
+            zorder=1,
         )
         obs = np.copy(p)
         obs[obs<=1.] = np.nan
@@ -411,11 +412,12 @@ class SDCarto(GeoAxes):
             transform=cartopy.crs.PlateCarree(), 
             cmap="gray_r",
             alpha=0.3,
-            levels=[1.0, 2.0]
+            levels=[1.0, 2.0],
+            zorder=1
         )
         # if cb: _add_colorbar(fig, ax, im)
         if cb:
-            utils.setsize(8)
+            utils.setsize(10)
             fig = self.get_figure()
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = self.inset_axes(cpos, transform=self.transAxes)
@@ -434,7 +436,7 @@ class SDCarto(GeoAxes):
         fovAlpha=0.2,
         zorder=1,
         lineColor="k",
-        lineWidth=0.2,
+        lineWidth=0.5,
         ls="-",
         model="IS",
         fov_dir="front",
@@ -461,18 +463,24 @@ class SDCarto(GeoAxes):
         x, y = xyz[:, :, 0], xyz[:, :, 1]
         contour_x = concatenate(
             (
-                x[sbeam, :],
-                x[:, egate],
-                x[ebeam, ::-1],
-                x[::-1, sgate],
+                x[sbeam, :egate],
+                x[sbeam:ebeam, egate],
+                x[ebeam, egate-1::-1],
+                x[ebeam::-1, sgate],
             )
+        )
+        print(
+            x[sbeam, :egate].shape, 
+            x[sbeam:ebeam+1, egate].shape, 
+            x[ebeam, egate-1::-1].shape,
+            x[ebeam::-1, sgate].shape
         )
         contour_y = concatenate(
             (
-                y[sbeam, :],
-                y[:, egate],
-                y[ebeam, ::-1],
-                y[::-1, sgate],
+                y[sbeam, :egate],
+                y[sbeam:ebeam, egate],
+                y[ebeam, egate-1::-1],
+                y[ebeam::-1, sgate],
             )
         )
         self.plot(
@@ -503,7 +511,7 @@ class SDCarto(GeoAxes):
             self.text(
                 xloc, yloc,
                 sbeam, ha="center", va="center",
-                fontdict=dict(color="r")
+                fontdict=dict(color="r", fontweight="normal", size=8),
             )
             self.plot(
                 np.mean(x[sbeam:ebeam+1, sgate:egate], axis=0),
@@ -542,7 +550,8 @@ class SDCarto(GeoAxes):
         if len(df) > 0:
             # TODO
             hdw = pydarn.read_hdw_file(rad)
-            lats, lons = pydarn.Coords.GEOGRAPHIC(hdw.stid)
+            lats, lons = pydarn.Coords.GEOGRAPHIC(hdw.stid, center=True)
+            print(lats.shape, lons.shape)
             lats, lons = lats.T, lons.T
             Xb, Yg, Px = utils.get_gridded_parameters(
                 df, xparam="bmnum", yparam="slist", zparam=p_name
@@ -562,9 +571,10 @@ class SDCarto(GeoAxes):
                 cmap=cmap,
                 vmax=p_max,
                 vmin=p_min,
-                s=0.3,
+                s=0.5,
                 marker="s",
                 alpha=0.9,
+                zorder=4,
                 **kwargs,
             )
             # im = self.pcolormesh(
@@ -585,12 +595,13 @@ class SDCarto(GeoAxes):
         """
         Add a colorbar to the right of an axis.
         """
-        utils.setsize()
+        utils.setsize(10)
         fig = self.get_figure()
         cpos = [1.04, 0.1, 0.025, 0.8]
         cax = self.inset_axes(cpos, transform=self.transAxes)
         cb = fig.colorbar(im, ax=self, cax=cax)
         cb.set_label(label)
+        utils.setsize(12)
         return
 
     def overlay_tec(

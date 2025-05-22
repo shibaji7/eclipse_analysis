@@ -3,7 +3,7 @@ import ephem
 import numpy as np
 import datetime as dt
 
-import eclipse_calc
+# import eclipse_calc
 
 def smooth(x,window_len=11,window="hanning"):
     if x.ndim != 1: raise ValueError("smooth only accepts 1 dimension arrays.")
@@ -98,8 +98,8 @@ def magnetic_inclination_angle(lats, lons, date):
 def setsize(size=12):
     import matplotlib as mpl
     import matplotlib.pyplot as plt
-
-    import mplstyle
+    import scienceplots
+#    import mplstyle
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.sans-serif"] = [
         "Tahoma",

@@ -22,7 +22,7 @@ from generate_plots import (
     create_RTP_pydarn_plots,
 )
 
-methods = ["fan_plot"]
+methods = ["plot_rti"]
 setup()
 
 if "plot_fov" in methods:
@@ -73,11 +73,11 @@ if "download" in methods:
     )
 
 if "plot_rti" in methods:
-    rad_beams = [("sas", 4)]
+    rad_beams = [("fir", 15)]
     yscale = "srange" 
     range = [0,4500]
-    channel = None
-    tfreq = None
+    channel = 2
+    tfreq = 12
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     create_rti_plots(rad_beams, dates, range=range, tfreq=tfreq, channel=channel)
     # import glob
