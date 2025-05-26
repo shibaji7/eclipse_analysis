@@ -23,8 +23,8 @@ from generate_plots import (
 )
 
 methods = [
-   "plot_rti", 
-    # "fan_plot",
+#    "plot_rti", 
+    "fan_plot",
 ]
 
 
@@ -58,7 +58,7 @@ def plotr(rad_beams, fname, dates, range, yscale, xlabel_index=0, esj=0, cbj=0, 
         ax = rti.addParamPlot(
             rad, df, 
             beam, title=title,
-            p_max=30, p_min=-30,
+            p_max=30, p_min=-100,
             xlabel="Time, UT" if j==xlabel_index else "", ylabel=r"Slant Range, km", 
             zparam="v", label=r"Velocity, $ms^{-1}$",
             cmap="Spectral", cbar=j==cbj, add_gflg=False,
@@ -76,19 +76,20 @@ if "plot_rti" in methods:
     range = [0,4500]
     dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
     rad_beams = [
-        dict(rad="fir", beam=11, channel=2, tfreq=10.5),
-        dict(rad="fir", beam=11, channel=2, tfreq=12),
-        dict(rad="fir", beam=11, channel=2, tfreq=13.5),
-        dict(rad="fir", beam=11, channel=2, tfreq=15.5)
+        dict(rad="fir", beam=7, channel=2, tfreq=10.5),
+        dict(rad="fir", beam=7, channel=2, tfreq=12),
+        dict(rad="fir", beam=7, channel=2, tfreq=13.5),
+        dict(rad="fir", beam=7, channel=2, tfreq=15.5)
     ]
     plotr(rad_beams, f"figures_2021/rti.fir-11-2-all.png", dates, range, yscale, xlabel_index=3, esj=3, cbj=0, dx=0.05)
 
     rad_beams = [
         dict(rad="fir", beam=3, channel=2, tfreq=10.5),
         dict(rad="fir", beam=7, channel=2, tfreq=12),
+        dict(rad="fir", beam=11, channel=2, tfreq=13.5),
         dict(rad="fir", beam=15, channel=2, tfreq=10.5),
     ]
-    plotr(rad_beams, f"figures_2021/rti.fir-7-2-individual.png", dates, range, yscale, xlabel_index=2, esj=2, cbj=0, dx=0.05)
+    plotr(rad_beams, f"figures_2021/rti.fir-7-2-individual.png", dates, range, yscale, xlabel_index=3, esj=3, cbj=0, dx=0.05)
     
 
 
@@ -105,4 +106,16 @@ if "fan_plot" in methods:
         central_longitude=100, central_latitude=-60.0,
     extent=[-40, -100, -90, -50], plt_lats = np.arange(-90, -50, 10), 
     p_min=-30, p_max=30, mark_lon=-50, xOffset=5, yOffset=-1.5, 
+    )
+
+    rads = ["fir"]
+    channel = 2
+    tfreq = 12
+    dates = [dt.datetime(2021,12,4,6,30),dt.datetime(2021,12,4,7,30), 
+             dt.datetime(2021,12,4,7,40), dt.datetime(2021,12,4,7,50),]
+    create_fan_plots(
+        rads, dates, tfreq=tfreq, channel=channel,
+        central_longitude=100, central_latitude=-60.0,
+    extent=[-40, -100, -90, -50], plt_lats = np.arange(-90, -50, 10), 
+    p_min=-100, p_max=30, mark_lon=-50, xOffset=5, yOffset=-1.5, 
     )
