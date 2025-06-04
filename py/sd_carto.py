@@ -29,6 +29,10 @@ from descartes import PolygonPatch
 import eutils as utils
 
 
+def load_eclipse_datasets(date, loc="database/December2021/December2021/"):
+    import xarray as xr
+    d = xr.open_dataset(loc + f"{date.strftime('%Y%m%d%H%M%S')}_150km_193_1.nc")
+    return d
 
 class SDCarto(GeoAxes):
     name = "SDCarto"
@@ -385,46 +389,63 @@ class SDCarto(GeoAxes):
         return
 
     def overlay_eclipse(self, cb=True):
-        from cartopy.feature.nightshade import Nightshade
-        self.add_feature(Nightshade(self.plot_date, alpha=0.2))
-        alts = np.array([100])
-        lats = np.linspace(-90, 90, num=int(181*4))
-        lons = np.linspace(-180, 180, num=int(181*4))
-        p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
-        p = np.ma.masked_invalid(p)[0,0,:,:]
-        obs = np.copy(p)
-        obs[obs>1.] = np.nan
-        im = self.contourf(
-            lons,
-            lats,
-            obs,
+        d = load_eclipse_datasets(self.plot_date)
+        print(d)
+        # from cartopy.feature.nightshade import Nightshade
+        # self.add_feature(Nightshade(self.plot_date, alpha=0.2))
+        # alts = np.array([100])
+        # lats = np.linspace(-90, 90, num=int(181*4))
+        # lons = np.linspace(-180, 180, num=int(181*4))
+        # p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
+        # p = np.ma.masked_invalid(p)[0,0,:,:]
+        # obs = np.copy(p)
+        # obs[obs>1.] = np.nan
+        print((1-d.of.values).min(), (1-d.of.values).max())
+        cs = self.contour(
+            d.glon,
+            d.glat,
+            1-d.of,
             transform=cartopy.crs.PlateCarree(),
-            cmap="gray_r", alpha=0.4,
-            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0],
-            zorder=1,
+            colors="k", 
+            linewidths=0.7,
+            levels=[0.2, 0.4, 0.8, 0.9, 1.0],
+            zorder=3,
         )
-        obs = np.copy(p)
-        obs[obs<=1.] = np.nan
+        self.contourf(
+            d.glon,
+            d.glat,
+            1-d.of,
+            transform=cartopy.crs.PlateCarree(),
+            cmap="gray_r", 
+            alpha=0.6,
+            levels=[0.2, 0.4, 0.8, 0.9, 1.0],
+            zorder=3,
+        )
+        self.clabel(cs, inline=True, fontsize=10, fmt='%.2f')
+        # obs = np.copy(p)
+        # obs[obs<=1.] = np.nan
+        Z = np.cos(np.deg2rad(d.sza.values))
         self.pcolormesh(
-            lons,
-            lats,
-            obs,
+            d.glon,
+            d.glat,
+            Z,
             transform=cartopy.crs.PlateCarree(), 
             cmap="gray",
             alpha=0.8, shading="nearest",
             lw=0.0,
+            vmin=0., vmax=0.5,
             # levels=[1.0, 2.0],
             zorder=1
         )
-        # if cb: _add_colorbar(fig, ax, im)
-        if cb:
-            utils.setsize(10)
-            fig = self.get_figure()
-            cpos = [1.05, 0.1, 0.025, 0.6]
-            cax = self.inset_axes(cpos, transform=self.transAxes)
-            cb = fig.colorbar(im, ax=self, cax=cax)
-            utils.setsize(10)
-            cb.set_label("Obscuration")
+        # # if cb: _add_colorbar(fig, ax, im)
+        # if cb:
+        #     utils.setsize(10)
+        #     fig = self.get_figure()
+        #     cpos = [1.05, 0.1, 0.025, 0.6]
+        #     cax = self.inset_axes(cpos, transform=self.transAxes)
+        #     cb = fig.colorbar(im, ax=self, cax=cax)
+        #     utils.setsize(10)
+        #     cb.set_label("Obscuration")
         return
 
     def overlay_fov(

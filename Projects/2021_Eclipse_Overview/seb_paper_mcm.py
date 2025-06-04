@@ -22,7 +22,8 @@ from generate_plots import (
     create_RTP_pydarn_plots,
 )
 
-methods = ["fan_plot", "plot_fov", "plot_rti"]
+methods = ["plot_rti"]
+# methods = ["fan_plot", "plot_fov", "plot_rti"]
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
@@ -32,9 +33,9 @@ if "plot_fov" in methods:
 
 if "plot_rti" in methods:
     rad_beams = [
-        dict(rad="mcm", beam=0, channel=None, tfreq=None),
-        dict(rad="mcm", beam=7, channel=None, tfreq=None),
-        dict(rad="mcm", beam=15, channel=None, tfreq=None)
+        dict(rad="mcm", beam=11, channel=None, tfreq=None),
+        # dict(rad="mcm", beam=7, channel=None, tfreq=None),
+        # dict(rad="mcm", beam=15, channel=None, tfreq=None)
     ]
     yscale = "srange" 
     range = [0,3500]
@@ -67,7 +68,7 @@ if "plot_rti" in methods:
         ax = rti.addParamPlot(
             rad, df, 
             beam, title=title,
-            p_max=500, p_min=0,
+            p_max=200, p_min=-200,
             xlabel="Time, UT" if j==2 else "", ylabel="Slant Range, km", 
             zparam="v", label=r"Velocity, $ms^{-1}$",
             cmap="Spectral", cbar=j==0, add_gflg=False,
