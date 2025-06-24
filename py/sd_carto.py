@@ -569,6 +569,8 @@ class SDCarto(GeoAxes):
         if maxGate or hasattr(self, "maxGate"):
             maxGate = maxGate if maxGate else self.maxGate
             df = df[(df.slist <= maxGate)]
+        
+        print("maxGate>>>>>>>>>>>>>", maxGate)
         if len(df) > 0:
             # TODO
             hdw = pydarn.read_hdw_file(rad)
@@ -585,6 +587,7 @@ class SDCarto(GeoAxes):
             # lons, lats = ((lons+hdw.geographic.lon)/2, (lats+hdw.geographic.lat)/2)
             XYZ = tx.transform_points(fm, lons, lats)
             Px = np.ma.masked_invalid(Px)
+            print(XYZ.shape, Px.shape)
             im = self.scatter(
                 XYZ[:, :, 0],
                 XYZ[:, :, 1],

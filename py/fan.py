@@ -137,8 +137,8 @@ class Fan(object):
                 transform=ax.transAxes,
                 fontsize="small",
             )
-        ax.overaly_eclipse_path(lineWidth=0.2)
-        ax.overlay_eclipse(self.cb)
+        # ax.overaly_eclipse_path(lineWidth=0.2)
+        # ax.overlay_eclipse(self.cb)
         return ax
 
     def date_string(self, label_style="web"):
@@ -151,7 +151,7 @@ class Fan(object):
 
     def generate_fov(
         self, rad, frame, beams=[], ax=None, 
-        maxGate=70, col="k", p_name="v",
+        maxGate=76, col="k", p_name="v",
         p_max=30, p_min=-30, cmap="Spectral",
         label="Velocity, m/s", eclipse_cb=False, cbar=True,
         yOffset=5, xOffset=-5,
@@ -162,6 +162,7 @@ class Fan(object):
         ax = ax if ax else self.add_axes()
         ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
         ax.overlay_fov(rad, lineColor=col)
+        print(frame)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 
             p_name=p_name, p_max=p_max, p_min=p_min,

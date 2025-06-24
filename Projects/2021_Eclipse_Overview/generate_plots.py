@@ -252,9 +252,9 @@ def create_fan_plots(
         df = radar.df.copy()
         if channel:
             df = df[df.channel==channel]
-        df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
+        df["unique_tfreq"] = df.tfreq#.apply(lambda x: int(x/0.5)*0.5)
         if tfreq: 
-            df = df[df.unique_tfreq==tfreq]
+            df = df[df.tfreq.isin(tfreq)]
         v, tf = np.array(df.v), np.array(df.unique_tfreq)
         v[tf==10.5] *= -1
         df.v = v
@@ -278,8 +278,10 @@ def create_fan_plots(
                 (o.time>=date)
                 & (o.time<=date+dt.timedelta(minutes=1))
             ]
+            # o = o[o.bmnum==7]
+            print(o)
             fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=p_max, p_min=p_min,
-                             xOffset=5, yOffset=-1.5,)
+                             xOffset=5, yOffset=-1.5, maxGate=80)
         ax.text(0.05, 0.95, tags[j], ha="left", va="top", transform=ax.transAxes,)
         # apex = Apex(date)
 
