@@ -56,7 +56,7 @@ class Fan(object):
         self.date = date
         self.nrows, self.ncols = nrows, ncols
         self._num_subplots_created = 0
-        self.fig = plt.figure(figsize=(3 * ncols, 3 * nrows), dpi=300)
+        self.fig = plt.figure(figsize=(3 * ncols, 2.5 * nrows), dpi=300)
         self.coord = coord
         self.central_longitude = central_longitude
         self.central_latitude = central_latitude
@@ -83,11 +83,11 @@ class Fan(object):
         """
         from sd_carto import SDCarto
         self._num_subplots_created += 1
-        # proj = cartopy.crs.SouthPolarStereo(central_longitude=120.0)
-        proj = cartopy.crs.Stereographic(
-            central_longitude=self.central_longitude, 
-            central_latitude=self.central_latitude
-        )
+        proj = cartopy.crs.SouthPolarStereo(central_longitude=self.central_longitude)
+        # proj = cartopy.crs.Stereographic(
+        #     central_longitude=self.central_longitude, 
+        #     central_latitude=self.central_latitude
+        # )
         # proj = cartopy.crs.PlateCarree(central_longitude=-90.0)
         ax = self.fig.add_subplot(
             100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
@@ -112,8 +112,8 @@ class Fan(object):
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
         gl.n_steps = 90
-        ax.mark_latitudes(plt_lats, fontsize="xx-small", color="k", lon_location=self.mark_lon)
-        ax.mark_longitudes(mark_lons, fontsize="xx-small", color="k")
+        ax.mark_latitudes(plt_lats, fontsize=6, color="k", lon_location=self.mark_lon)
+        ax.mark_longitudes(mark_lons, fontsize=6, color="k")
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()
         if add_coords:
@@ -124,18 +124,18 @@ class Fan(object):
                 ha="center",
                 va="top",
                 transform=ax.transAxes,
-                fontsize="small",
+                fontsize="x-small",
                 rotation=90,
             )
         if add_time:
             ax.text(
                 0.99,
-                0.99,
+                1.05,
                 self.date_string(),
                 ha="right",
                 va="top",
                 transform=ax.transAxes,
-                fontsize="small",
+                fontsize="xx-small",
             )
         # ax.overaly_eclipse_path(lineWidth=0.2)
         # ax.overlay_eclipse(self.cb)
@@ -160,20 +160,20 @@ class Fan(object):
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
-        ax.overlay_fov(rad, lineColor=col)
-        print(frame)
+        ax.overlay_radar(rad, font_color="k", yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
+        ax.overlay_fov(rad, lineColor="k", maxGate=maxGate,)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 
             p_name=p_name, p_max=p_max, p_min=p_min,
-            cmap=cmap, label=label, cbar=cbar,
+            #cmap=cmap, 
+            label=label, cbar=cbar,
         )
         if beams and len(beams) > 0:
             [
                 ax.overlay_fov(rad, beamLimits=[b, b + 1], ls="-", lineColor="r",
                 lineWidth=1.2) for b in beams
             ]
-        if eclipse_cb: ax.overlay_eclipse(eclipse_cb)
+        ax.overlay_eclipse(eclipse_cb)
         return
 
     def generate_fovs(self, fds, beams=[], laytec=False):

@@ -27,7 +27,56 @@ from matplotlib.projections import register_projection
 from shapely.geometry import LineString, MultiLineString, Polygon, mapping
 from descartes import PolygonPatch
 import eutils as utils
+from matplotlib.colors import LinearSegmentedColormap
 
+RedBlackBlue = LinearSegmentedColormap.from_list(
+    "RedBlackBlue",
+    [
+                (0.0, "#FF0000"),  # reddish
+                (0.25,"#EF8787"),  # reddish
+                (0.5, "#F8F8F8"),  # black
+                (0.75, "#7076E0E8"),  # black
+                (1.0, "#131DE3E8"),  # black
+            ],
+)
+
+
+from scipy.interpolate import griddata
+
+def smooth_2d_interpolate(glon, glat, of, grid_size=360, method='cubic'):
+    """
+    Interpolates and smooths a 2D array with possible NaNs using 1D longitude and latitude arrays.
+
+    Parameters:
+        glon (1D array): Longitudes.
+        glat (1D array): Latitudes.
+        of (2D array): Data array (shape: (len(glat), len(glon))), may contain NaNs.
+        grid_size (int): Resolution of the output grid.
+        method (str): Interpolation method ('linear', 'nearest', 'cubic').
+
+    Returns:
+        glon_grid (2D array): Meshgrid of interpolated longitudes.
+        glat_grid (2D array): Meshgrid of interpolated latitudes.
+        of_interp (2D array): Interpolated and smoothed data.
+    """
+    glon_mesh, glat_mesh = np.meshgrid(glon, glat)
+    points = np.column_stack((glon_mesh.ravel(), glat_mesh.ravel()))
+    values = of.ravel()
+
+    # Mask out NaNs
+    mask = ~np.isnan(values)
+    points_valid = points[mask]
+    values_valid = values[mask]
+
+    # New grid for interpolation
+    glon_new = np.linspace(np.min(glon), np.max(glon), grid_size)
+    glat_new = np.linspace(np.min(glat), np.max(glat), grid_size)
+    glon_grid, glat_grid = np.meshgrid(glon_new, glat_new)
+
+    # Interpolate
+    of_interp = griddata(points_valid, values_valid, (glon_grid, glat_grid), method=method)
+
+    return glon_new, glat_new, glon_grid, glat_grid, of_interp
 
 def load_eclipse_datasets(date, loc="database/December2021/December2021/"):
     import xarray as xr
@@ -70,6 +119,15 @@ class SDCarto(GeoAxes):
             print("coords keyword not set, setting it to aacgmv2")
         # finally, initialize te GeoAxes object
         super().__init__(map_projection=map_projection, *args, **kwargs)
+        return
+
+    def add_square_grid(self, box_lon_min, box_lat_min, radius):
+        import matplotlib.patches as mpatches
+        
+        rect = mpatches.Circle((box_lon_min, box_lat_min), radius,
+                              linewidth=1, edgecolor='k', facecolor='none',
+                              transform=cartopy.crs.PlateCarree())
+        self.add_patch(rect)
         return
 
     def overaly_coast_lakes(self, resolution="50m", color="black", **kwargs):
@@ -390,62 +448,49 @@ class SDCarto(GeoAxes):
 
     def overlay_eclipse(self, cb=True):
         d = load_eclipse_datasets(self.plot_date)
-        print(d)
-        # from cartopy.feature.nightshade import Nightshade
-        # self.add_feature(Nightshade(self.plot_date, alpha=0.2))
-        # alts = np.array([100])
-        # lats = np.linspace(-90, 90, num=int(181*4))
-        # lons = np.linspace(-180, 180, num=int(181*4))
-        # p, _, _= utils.get_eclipse(self.plot_date, alts, lats, lons)
-        # p = np.ma.masked_invalid(p)[0,0,:,:]
-        # obs = np.copy(p)
-        # obs[obs>1.] = np.nan
-        print((1-d.of.values).min(), (1-d.of.values).max())
         cs = self.contour(
             d.glon,
             d.glat,
             1-d.of,
             transform=cartopy.crs.PlateCarree(),
             colors="k", 
-            linewidths=0.7,
-            levels=[0.2, 0.4, 0.8, 0.9, 1.0],
-            zorder=3,
+            linewidths=0.5,
+            levels=[0.2, 0.4, 0.6, 0.75, 1.0],
+            zorder=1, alpha=0.6,
         )
-        self.contourf(
+        im = self.contourf(
             d.glon,
             d.glat,
             1-d.of,
             transform=cartopy.crs.PlateCarree(),
             cmap="gray_r", 
             alpha=0.6,
-            levels=[0.2, 0.4, 0.8, 0.9, 1.0],
-            zorder=3,
+            levels=[0.2, 0.4, 0.6, 0.75, 1.0],
+            zorder=1,
         )
-        self.clabel(cs, inline=True, fontsize=10, fmt='%.2f')
-        # obs = np.copy(p)
-        # obs[obs<=1.] = np.nan
+        self.clabel(cs, inline=True, fontsize=6, fmt='%.2f')
         Z = np.cos(np.deg2rad(d.sza.values))
+        Z[np.abs(d.sza.values)>=90] = 0
+        Z[np.abs(d.sza.values)<=90] = np.nan
         self.pcolormesh(
             d.glon,
             d.glat,
             Z,
             transform=cartopy.crs.PlateCarree(), 
             cmap="gray",
-            alpha=0.8, shading="nearest",
+            alpha=0.5, shading="nearest",
             lw=0.0,
             vmin=0., vmax=0.5,
-            # levels=[1.0, 2.0],
-            zorder=1
+            zorder=0,
         )
-        # # if cb: _add_colorbar(fig, ax, im)
-        # if cb:
-        #     utils.setsize(10)
-        #     fig = self.get_figure()
-        #     cpos = [1.05, 0.1, 0.025, 0.6]
-        #     cax = self.inset_axes(cpos, transform=self.transAxes)
-        #     cb = fig.colorbar(im, ax=self, cax=cax)
-        #     utils.setsize(10)
-        #     cb.set_label("Obscuration")
+        if cb:
+            utils.setsize(10)
+            fig = self.get_figure()
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = self.inset_axes(cpos, transform=self.transAxes)
+            cb = fig.colorbar(im, ax=self, cax=cax)
+            utils.setsize(10)
+            cb.set_label("Obscuration")
         return
 
     def overlay_fov(
@@ -456,9 +501,9 @@ class SDCarto(GeoAxes):
         beamLimits=None,
         fovColor=None,
         fovAlpha=0.2,
-        zorder=1,
-        lineColor="k",
-        lineWidth=0.5,
+        zorder=3,
+        lineColor="r",
+        lineWidth=0.8,
         ls="-",
         model="IS",
         fov_dir="front",
@@ -491,12 +536,6 @@ class SDCarto(GeoAxes):
                 x[ebeam::-1, sgate],
             )
         )
-        print(
-            x[sbeam, :egate].shape, 
-            x[sbeam:ebeam+1, egate].shape, 
-            x[ebeam, egate-1::-1].shape,
-            x[ebeam::-1, sgate].shape
-        )
         contour_y = concatenate(
             (
                 y[sbeam, :egate],
@@ -512,7 +551,7 @@ class SDCarto(GeoAxes):
             zorder=zorder,
             linewidth=lineWidth,
             ls=ls,
-            alpha=0.4,
+            alpha=0.7,
         )
         if fovColor:
             contour = transpose(vstack((contour_x, contour_y)))
@@ -556,7 +595,7 @@ class SDCarto(GeoAxes):
         p_min=0,
         p_name="p_l",
         label="Power [dB]",
-        cmap=plt.cm.plasma,
+        cmap=RedBlackBlue,
         cbar=True,
         maxGate=None,
         scan_time=None,
@@ -598,8 +637,8 @@ class SDCarto(GeoAxes):
                 vmin=p_min,
                 s=0.5,
                 marker="s",
-                alpha=0.9,
-                zorder=4,
+                alpha=1.,
+                zorder=7,
                 **kwargs,
             )
             # im = self.pcolormesh(

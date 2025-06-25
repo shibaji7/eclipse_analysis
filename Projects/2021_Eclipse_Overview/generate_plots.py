@@ -271,7 +271,7 @@ def create_fan_plots(
     for j, date in enumerate(dates):
         utils.setsize(12)
         fan.date = date
-        ax = fan.add_axes(add_coords=j==0, add_time=True)
+        ax = fan.add_axes(add_coords=j==0, add_time=False)
         for rad in rads:
             o = radars[rad].df.copy()
             o = o[
@@ -280,9 +280,27 @@ def create_fan_plots(
             ]
             # o = o[o.bmnum==7]
             print(o)
-            fan.generate_fov(rad, o, ax=ax, cbar=j==2,eclipse_cb=j==len(dates)-1, p_max=p_max, p_min=p_min,
-                             xOffset=5, yOffset=-1.5, maxGate=80)
-        ax.text(0.05, 0.95, tags[j], ha="left", va="top", transform=ax.transAxes,)
+            fan.generate_fov(
+                rad, o, ax=ax, cbar=j==2,
+                eclipse_cb=j==len(dates)-1, 
+                # eclipse_cb=True,
+                p_max=p_max, p_min=p_min,
+                xOffset=5, yOffset=-1.5, maxGate=100
+            )
+        ax.text(0.05, 1.05, tags[j] + f" {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        # ax.add_square_grid(-60,-85,10)
+        if j==0:
+            ax.text(
+                -0.05, 0.05, "Ch: [a, b]",
+                ha="left", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+                rotation=90
+            )
+            ax.text(
+                0.95, 1.05, f"$f_0$= {tfreq if tfreq else 'all'} MHz",
+                ha="right", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+            )
         # apex = Apex(date)
 
         ## map from other hemisphere

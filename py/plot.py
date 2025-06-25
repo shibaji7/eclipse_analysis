@@ -23,6 +23,41 @@ import matplotlib.ticker as mticker
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 import eutils as utils
 
+from matplotlib.colors import LinearSegmentedColormap
+
+RedBlackBlue = LinearSegmentedColormap.from_list(
+    "RedBlackBlue",
+    [
+        (0.0, "#FF0000"),  # reddish
+        (0.25,"#EF8787"),  # reddish
+        (0.5, "#F8F8F8"),  # black
+        (0.75, "#7076E0E8"),  # black
+        (1.0, "#131DE3E8"),  # black
+    ],
+)
+
+def load_eclipse_datasets(date, glons, glats, loc="database/December2021/"):
+    import xarray as xr
+    d = xr.open_dataset(loc + f"{date.strftime('%Y%m%d%H%M%S')}_150km_193_1.nc")
+
+    of_interp = []
+    for glat, glon in zip(glats, glons):
+        ilat, ilon = np.argmin(np.abs(d.glat.values - glat)), np.argmin(np.abs(d.glon.values - glon))
+        of_interp.append(d.of.values[ilat, ilon])
+    # Interpolate
+    return np.array(of_interp)
+
+def load_eclipse_xra_datasets(date, glons, glats, loc="database/December2021/"):
+    import xarray as xr
+    d = xr.open_dataset(loc + f"{date.strftime('%Y%m%d%H%M%S')}_150km_X_1.nc")
+
+    of_interp = []
+    for glat, glon in zip(glats, glons):
+        ilat, ilon = np.argmin(np.abs(d.glat.values - glat)), np.argmin(np.abs(d.glon.values - glon))
+        of_interp.append(d.of.values[ilat, ilon])
+    # Interpolate
+    return np.array(of_interp)
+
 
 class RangeTimePlot(object):
     """
@@ -46,7 +81,7 @@ class RangeTimePlot(object):
     
     def addParamPlot(
         self, rad, df, beam, title, p_max=100, p_min=-100, xlabel="Time UT",
-        ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap="jet_r", yparam="slist",
+        ylabel="Range gate", zparam="v", label="Velocity [m/s]", cmap=RedBlackBlue, yparam="slist",
         cbar=False, omni=None, add_gflg=False, kind="pmap"
     ):
         ax = self._add_axis()
@@ -104,30 +139,67 @@ class RangeTimePlot(object):
     def overlay_eclipse_shadow(self, rad, beam, dates, ax, eclipse_cbar, dx=0.2):
         ddates = [
             dates[0]+dt.timedelta(minutes=i) 
-            for i in range(int((dates[1]-dates[0]).total_seconds()/60))
+            for i in range(0, int((dates[1]-dates[0]).total_seconds()/60), 5)
         ]
         import pydarn
         hdw = pydarn.read_hdw_file(rad)
         fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
         glat, glon = fov[0][:101, beam], fov[1][:101, beam]
-        p = utils.get_rti_eclipse(ddates, glat, glon)
+        p = np.zeros((len(ddates), len(glat)))
+        for i, d in enumerate(ddates):
+            p[i,:] = load_eclipse_datasets(d, glon, glat, loc="database/December2021/")
         srange = (45 * np.arange(p.shape[1]))
-        obs = np.copy(p)
-        # obs[obs>1.] = np.nan
-        print(obs.shape, len(ddates), len(srange))
         im = ax.contourf(
             ddates,
             srange,
-            obs.T,
-            cmap="gray_r", alpha=0.4,
-            levels=[0.1, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0]
+            1-p.T,
+            cmap="gray_r", alpha=0.6,
+            levels=[0.1, 0.2, 0.4, 0.6, 0.75, 1.0]
         )
-        obs = np.copy(p)
-        obs[obs<=1.] = np.nan
-        ax.pcolormesh(
-            ddates, srange, obs.T, lw=0.01, edgecolors="None", cmap="gray_r",
-            vmax=1, vmin=0, shading="nearest", alpha=0.8, zorder=1
+        cs = ax.contour(
+            ddates,
+            srange,
+            1-p.T,
+            colors="k", 
+            linewidths=0.5,
+            levels=[0.2, 0.4, 0.6, 0.75, 1.0],
+            zorder=1, alpha=0.6,
         )
+        ax.clabel(cs, inline=True, fontsize=8, fmt='%.2f')
+        if eclipse_cbar:
+            self._add_colorbar(im, ax, "gray_r", label="Obscuration", dx=dx)
+        return
+
+    def overlay_eclipse_xra_shadow(self, rad, beam, dates, ax, eclipse_cbar, dx=0.2):
+        ddates = [
+            dates[0]+dt.timedelta(minutes=i) 
+            for i in range(0, int((dates[1]-dates[0]).total_seconds()/60), 5)
+        ]
+        import pydarn
+        hdw = pydarn.read_hdw_file(rad)
+        fov = pydarn.Coords.GEOGRAPHIC(hdw.stid)
+        glat, glon = fov[0][:101, beam], fov[1][:101, beam]
+        p = np.zeros((len(ddates), len(glat)))
+        for i, d in enumerate(ddates):
+            p[i,:] = load_eclipse_xra_datasets(d, glon, glat, loc="database/December2021/")
+        srange = (45 * np.arange(p.shape[1]))
+        im = ax.contourf(
+            ddates,
+            srange,
+            1-p.T,
+            cmap="gray_r", alpha=0.6,
+            levels=[0.1, 0.5, 1]
+        )
+        cs = ax.contour(
+            ddates,
+            srange,
+            1-p.T,
+            colors="k", 
+            linewidths=0.5,
+            levels=[0.1, 0.5, 1],
+            zorder=1, alpha=0.6,
+        )
+        ax.clabel(cs, inline=True, fontsize=8, fmt='%.2f')
         if eclipse_cbar:
             self._add_colorbar(im, ax, "gray_r", label="Obscuration", dx=dx)
         return
