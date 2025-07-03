@@ -68,3 +68,4 @@ if "fan_plot" in methods:
              dt.datetime(2021,12,4,9), dt.datetime(2021,12,4,9,30),
     ]
     create_fan_plots(rads, dates, tfreq=tfreq, channel=channel)
+
