@@ -78,7 +78,7 @@ def smooth_2d_interpolate(glon, glat, of, grid_size=360, method='cubic'):
 
     return glon_new, glat_new, glon_grid, glat_grid, of_interp
 
-def load_eclipse_datasets(date, loc="database/December2021/December2021/"):
+def load_eclipse_datasets(date, loc="database/December2021/"):
     import xarray as xr
     d = xr.open_dataset(loc + f"{date.strftime('%Y%m%d%H%M%S')}_150km_193_1.nc")
     return d

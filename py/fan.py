@@ -50,13 +50,14 @@ class Fan(object):
         central_longitude=120.0, central_latitude=-45.0,
         extent=[-180, 180, -90, -50], plt_lats = np.arange(-90, -40, 10),
         sup_title=True, mark_lon=120,
+        figsize=(3, 2.5), dpi=1000
     ):
         self.cb = cb
         self.rads = rads
         self.date = date
         self.nrows, self.ncols = nrows, ncols
         self._num_subplots_created = 0
-        self.fig = plt.figure(figsize=(3 * ncols, 2.5 * nrows), dpi=300)
+        self.fig = plt.figure(figsize=(figsize[0] * ncols, figsize[1] * nrows), dpi=dpi)
         self.coord = coord
         self.central_longitude = central_longitude
         self.central_latitude = central_latitude
@@ -185,18 +186,18 @@ class Fan(object):
             self.generate_fov(rad, fds[rad].df, beams, ax, laytec, col=fds[rad].color)
         return ax
 
-    def overlay_fovs(self, rad, beams=[], ax=None, col="k"):
+    def overlay_fovs(self, rad, beams=[], ax=None, col="k", maxGate=75):
         """
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
         ax.overlay_radar(rad, font_color=col, markerColor=col)
-        ax.overlay_fov(rad, lineColor=col, maxGate=75)
+        ax.overlay_fov(rad, lineColor=col, maxGate=maxGate)
         if beams and len(beams) > 0:
             for b in beams:
                 ax.overlay_fov(
                     rad, beamLimits=[b, b + 1], 
-                    maxGate=75,  ls="-", 
+                    maxGate=maxGate,  ls="-", 
                     lineColor="m", lineWidth=0.3
                 )
         return ax
