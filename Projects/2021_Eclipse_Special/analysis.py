@@ -24,7 +24,7 @@ from plotutils import (
 
 from call import ashley_model
 
-methods = ["fan_plot"]
+methods = ["fan_plot_fir"]
 setup()
 
 if "plot_fov" in methods:
@@ -37,7 +37,7 @@ if "plot_fov" in methods:
         hemi="south"
     )
 
-if "fan_plot" in methods:
+if "fan_plot_fir" in methods:
     rads = ["fir"]
     channel = None
     tfreq = [12.0, 12.2]
@@ -55,10 +55,13 @@ if "fan_plot" in methods:
     create_fan_plots(
         rads, dates, tfreq=tfreq, channel=channel,
         central_longitude=100, central_latitude=-60.0,
-        extent=[-40, -120, -90, -50], plt_lats = np.arange(-90, -50, 10), 
+        #extent=[-40, -120, -90, -50], 
+        extent=[-180, 180, -90, -40], 
+        plt_lats = np.arange(-90, -50, 10), 
         p_min=-50, p_max=50, mark_lon=-50, xOffset=5, yOffset=-1.5, 
     )
 
+if "fan_plot_mcm" in methods:
     rads = ["mcm"]
     channel = None
     tfreq = None

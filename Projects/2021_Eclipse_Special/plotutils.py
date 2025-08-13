@@ -164,6 +164,8 @@ def create_fan_plots(
     p_max=500, p_min=200, mark_lon=120, yOffset=5, xOffset=-5,
 ):
     radars = dict()
+    from readdmsp import read_1D_dmsp_datasets
+    dmspdata_south_boundary = read_1D_dmsp_datasets()
     for rad in rads:
         radar = Radar(rad, dates, type="fitacf")
         radar.calculate_ground_range()
@@ -190,6 +192,21 @@ def create_fan_plots(
         utils.setsize(12)
         fan.date = date
         ax = fan.add_axes(add_coords=j==0, add_time=False)
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="darkgreen", lw=0.5, #transform=fan.proj
+        )
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5, #transform=fan.proj
+        )
+        print(">>>>>>>>>>>>>>>>>>>>>",XYZ.shape)
         for rad in rads:
             o = radars[rad].df.copy()
             o = o[
@@ -197,7 +214,6 @@ def create_fan_plots(
                 & (o.time<=date+dt.timedelta(minutes=1))
             ]
             # o = o[o.bmnum==7]
-            print(o)
             fan.generate_fov(
                 rad, o, ax=ax, cbar=j==2,
                 eclipse_cb=j==len(dates)-1, 
