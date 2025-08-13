@@ -1,7 +1,12 @@
 
 
 import sys
-sys.path.extend(["py/", "Projects/2021_Eclipse_Special/"])
+sys.path.extend([
+    "py/", 
+    "Projects/2021_Eclipse_Special/", 
+    "Projects/2021_Eclipse_Special/ASHLEY_v1/ASHLEY-A/",
+    "Projects/2021_Eclipse_Special/ASHLEY_v1/ASHLEY-E/",
+])
 import argparse
 import datetime as dt
 from dateutil import parser as dparser
@@ -17,7 +22,9 @@ from plotutils import (
     create_fan_plots,
 )
 
-methods = ["plot_fov", "fan_plot"]
+from call import ashley_model
+
+methods = ["fan_plot"]
 setup()
 
 if "plot_fov" in methods:

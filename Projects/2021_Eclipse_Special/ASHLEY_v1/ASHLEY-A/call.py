@@ -21,7 +21,8 @@ def ashley_model(
     cf_inf=17000,
     ref_cfs=None,
     mlts_in=None,
-    mlats_in=None
+    mlats_in=None,
+    date=None,
 ):
     import numpy as np
     from spacepy import pycdf
@@ -110,3 +111,5 @@ def ashley_model(
     return mlts_out, mlats_out, diff_ef_out
 
 
+if __name__ == "__main__":
+    ashley_model()
