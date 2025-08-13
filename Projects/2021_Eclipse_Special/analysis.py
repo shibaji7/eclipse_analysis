@@ -24,7 +24,7 @@ from plotutils import (
 
 from call import ashley_model
 
-methods = ["fan_plot_mcm"]
+methods = ["fan_plot_fir", "fan_plot_mcm"]
 setup()
 
 if "plot_fov" in methods:
