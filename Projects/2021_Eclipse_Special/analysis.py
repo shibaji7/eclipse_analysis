@@ -24,7 +24,7 @@ from plotutils import (
 
 from call import ashley_model
 
-methods = ["fan_plot_fir"]
+methods = ["fan_plot_mcm"]
 setup()
 
 if "plot_fov" in methods:
@@ -49,7 +49,7 @@ if "fan_plot_fir" in methods:
              dt.datetime(2021,12,4,7,45),
              dt.datetime(2021,12,4,7,50),
              dt.datetime(2021,12,4,7,55),
-             dt.datetime(2021,12,4,8), #dt.datetime(2021,12,4,7,40),
+             dt.datetime(2021,12,4,8,5), #dt.datetime(2021,12,4,7,40),
              dt.datetime(2021,12,4,8,30),
              ]
     create_fan_plots(
@@ -70,10 +70,10 @@ if "fan_plot_mcm" in methods:
              dt.datetime(2021,12,4,7,30),
              dt.datetime(2021,12,4,7,35),
              dt.datetime(2021,12,4,7,40),
-             dt.datetime(2021,12,4,7,45),
-            #  dt.datetime(2021,12,4,7,50),
-            #  dt.datetime(2021,12,4,7,55),
-             dt.datetime(2021,12,4,8), #dt.datetime(2021,12,4,7,40),
+            #  dt.datetime(2021,12,4,7,45),
+             dt.datetime(2021,12,4,7,50),
+             dt.datetime(2021,12,4,7,55),
+            #  dt.datetime(2021,12,4,8,2), #dt.datetime(2021,12,4,7,40),
              dt.datetime(2021,12,4,8,30),
              dt.datetime(2021,12,4,9), dt.datetime(2021,12,4,9,30),
     ]
