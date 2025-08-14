@@ -257,3 +257,32 @@ def create_fan_plots(
     fan.save(f"figures_2021_Special/{date.strftime('%Y%m%d%H%M')}.png")
     fan.close()
     return
+
+def create_mix_ts():
+    from readmix import get_pot_drop
+    from plot import RangeTimePlot
+    import matplotlib.dates as mdates
+    from matplotlib.dates import DateFormatter
+
+    Phi0, time = get_pot_drop()
+
+    rti = RangeTimePlot(
+        100, [], 
+        # r"MIX $\phi$, in kV during Dec 4, 2021 Eclipse", 
+        "",
+        num_subplots=1
+    )
+    ax = rti._add_axis()
+
+    ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+    hours = mdates.HourLocator(byhour=range(0, 24, 6))
+    ax.xaxis.set_major_locator(hours)
+    ax.set_xlabel("Time, UT", fontdict={"size":12})
+    # ax.set_ylabel(r"$\Phi_0$, kV", fontdict={"size":12})
+    ax.set_ylabel(r"$J_p$, $\mu A/m^2$", fontdict={"size":12})
+    ax.set_xlim(dt.datetime(2021, 12, 4), dt.datetime(2021, 12, 5))
+    ax.plot(time, Phi0, "ko", ms=1)
+    rti.save("figures_2021_Special/rti_mix.png")
+    rti.close()
+    print(">>>>>>>>>>>>>>>>")
+    return

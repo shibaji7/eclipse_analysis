@@ -20,12 +20,16 @@ from plotutils import (
     generate_fov_overview,
     generate_conjugate_fov_overview,
     create_fan_plots,
+    create_mix_ts
 )
 
 from call import ashley_model
 
-methods = ["fan_plot_fir", "fan_plot_mcm"]
+methods = ["ts_mix_pot"]
 setup()
+
+if "ts_mix_pot" in methods:
+    create_mix_ts()
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
