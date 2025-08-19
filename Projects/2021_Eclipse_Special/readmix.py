@@ -10,7 +10,7 @@ def read_mix(file_path=None):
     print(ds.Pot.values[0, :, :].max()-ds.Pot.values[0, :, :].min())
     return ds
 
-def get_pot_drop(file_path=None, var="J_par"):
+def get_pot_drop(file_path=None, var="Pot"):
     ds = read_mix(file_path)
     mjd_epoch = dt.datetime(1858, 11, 17, 0, 0, 0)
     time = [mjd_epoch+dt.timedelta(d) for d in ds.time.values]
