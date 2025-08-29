@@ -91,7 +91,9 @@ class Fan(object):
         # )
         # proj = cartopy.crs.PlateCarree(central_longitude=-90.0)
         ax = self.fig.add_subplot(
-            100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
+            self.nrows, self.ncols,
+            self._num_subplots_created,
+            # 100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
             projection="SDCarto",
             map_projection=proj,
             coords=self.coord,
@@ -161,12 +163,12 @@ class Fan(object):
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color="k", yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
-        ax.overlay_fov(rad, lineColor="k", maxGate=maxGate,)
+        ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
+        ax.overlay_fov(rad, lineColor=col, maxGate=maxGate,)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 
             p_name=p_name, p_max=p_max, p_min=p_min,
-            #cmap=cmap, 
+            cmap=cmap, 
             label=label, cbar=cbar,
         )
         if beams and len(beams) > 0:

@@ -80,7 +80,30 @@ def smooth_2d_interpolate(glon, glat, of, grid_size=360, method='cubic'):
 
 def load_eclipse_datasets(date, loc="database/December2021/"):
     import xarray as xr
-    d = xr.open_dataset(loc + f"{date.strftime('%Y%m%d%H%M%S')}_150km_193_1.nc")
+    import glob
+    import re
+    from datetime import datetime
+    # Find all .nc files in the directory
+    files = glob.glob(f"{loc}/*193_1.nc")
+    if not files:
+        raise FileNotFoundError(f"No .nc files found in {loc}")
+    # Extract timestamps from filenames
+    time_file_map = {}
+    time_pattern = re.compile(r"(\d{8}\d{6})")
+    for f in files:
+        match = time_pattern.search(f)
+        if match:
+            try:
+                file_time = datetime.strptime(match.group(1), "%Y%m%d%H%M%S")
+                time_file_map[file_time] = f
+            except Exception:
+                continue
+    if not time_file_map:
+        raise ValueError("No valid timestamped files found.")
+    # Find the file with the nearest time
+    nearest_time = min(time_file_map.keys(), key=lambda t: abs(t - date))
+    nearest_file = time_file_map[nearest_time]
+    d = xr.open_dataset(nearest_file)
     return d
 
 class SDCarto(GeoAxes):
@@ -604,6 +627,8 @@ class SDCarto(GeoAxes):
         **kwargs,
 
     ):
+        if cmap is None:
+            cmap = RedBlackBlue
         """Overlay radar Data"""
         if maxGate or hasattr(self, "maxGate"):
             maxGate = maxGate if maxGate else self.maxGate

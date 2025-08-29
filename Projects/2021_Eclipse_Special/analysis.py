@@ -20,16 +20,18 @@ from plotutils import (
     generate_fov_overview,
     generate_conjugate_fov_overview,
     create_fan_plots,
-    create_mix_ts
+    create_mix_ts, create_rays,
+    create_fan_plots_stack,
+    create_map_plots,
 )
 
-from call import ashley_model
 
-methods = ["ts_mix_pot"]
+methods = ["plot_maps"]
 setup()
 
-if "ts_mix_pot" in methods:
-    create_mix_ts()
+if "others" in methods:
+    # create_mix_ts()
+    create_rays()
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
@@ -42,27 +44,35 @@ if "plot_fov" in methods:
     )
 
 if "fan_plot_fir" in methods:
-    rads = ["fir"]
-    channel = None
-    tfreq = [12.0, 12.2]
+    rads = ["fir", "mcm"]
+    channel = [None, None]
+    tfreq = [[12.0, 12.2], None]
     dates = [
+
+        dt.datetime(2021,12,4,6),
+             dt.datetime(2021,12,4,6,30),
              dt.datetime(2021,12,4,7), 
              dt.datetime(2021,12,4,7,30),
-             dt.datetime(2021,12,4,7,35),
+             #dt.datetime(2021,12,4,7,35),
              dt.datetime(2021,12,4,7,40),
-             dt.datetime(2021,12,4,7,45),
+             #dt.datetime(2021,12,4,7,45),
              dt.datetime(2021,12,4,7,50),
              dt.datetime(2021,12,4,7,55),
-             dt.datetime(2021,12,4,8,5), #dt.datetime(2021,12,4,7,40),
-             dt.datetime(2021,12,4,8,30),
+            #  dt.datetime(2021,12,4,8),
+              dt.datetime(2021,12,4,8, 5), #dt.datetime(2021,12,4,7,40),
+            #  dt.datetime(2021,12,4,8,30),
+            dt.datetime(2021,12,4,8, 10),
+            dt.datetime(2021,12,4,8, 15),
+            dt.datetime(2021,12,4,8, 30),
+            dt.datetime(2021,12,4,9,30),
              ]
-    create_fan_plots(
+    create_fan_plots_stack(
         rads, dates, tfreq=tfreq, channel=channel,
         central_longitude=100, central_latitude=-60.0,
         #extent=[-40, -120, -90, -50], 
-        extent=[-180, 180, -90, -40], 
-        plt_lats = np.arange(-90, -50, 10), 
-        p_min=-50, p_max=50, mark_lon=-50, xOffset=5, yOffset=-1.5, 
+        extent=[-180, 180, -90, -50], 
+        plt_lats = np.arange(-90, -49, 10), 
+        p_min=[-50, 100], p_max=[50, 400], mark_lon=-50,
     )
 
 if "fan_plot_mcm" in methods:
@@ -82,4 +92,11 @@ if "fan_plot_mcm" in methods:
              dt.datetime(2021,12,4,9), dt.datetime(2021,12,4,9,30),
     ]
     create_fan_plots(rads, dates, tfreq=tfreq, channel=channel)
+
+if "plot_maps" in methods:
+    create_map_plots()
+
+# if "plot_rti_analysis" in methods:
+#     calculate_decay_rate
+
 

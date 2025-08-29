@@ -286,3 +286,224 @@ def create_mix_ts():
     rti.close()
     print(">>>>>>>>>>>>>>>>")
     return
+
+def create_rays():
+    import rays
+    rtos = [
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 30), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 30), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 45), "fir", 0, limit_elvs=[20, 40]),
+    ]
+    rp = rays.PlotRays(rtos[0], nrows=len(rtos), ncols=1, arc=True)
+    rp.lay_rays(
+        text="(A) 7:00 UT",
+    )
+    for i, ray in enumerate(rtos[1:]):
+        rp.lay_rays(
+            rto=ray,
+            text=f"({chr(ord('B')+i)}) {ray.event.strftime('%H:%M UT')}",
+            add_cbar=False,
+            add_tag=False,
+        )
+    rp.save(f"figures_2021_Special/Rays.png")
+    rp.close()
+    return
+
+
+def create_fan_plots_stack(
+    rads, dates, tfreq=[None], channel=[None], cb=False,
+    central_longitude=80.0, central_latitude=-60.0,
+    extent=[60, 130, -90, -45], plt_lats = np.arange(-90, -45, 10),
+    tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)", "(L)"],
+    p_max=[500], p_min=[200], mark_lon=120, YO=[2, -3], XO=[-5, -1],
+    labels = ["Velocity(fir), m/s", "Velocity(mcm), m/s"],
+    colors= ["r", "b"], cmaps=[None, "Blues"]
+):
+    radars = dict()
+    from readdmsp import read_1D_dmsp_datasets
+    dmspdata_south_boundary = read_1D_dmsp_datasets()
+    for rad, tf0, ch in zip(rads, tfreq, channel):
+        radar = Radar(rad, dates, type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        if ch:
+            df = df[df.channel==ch]
+        df["unique_tfreq"] = df.tfreq#.apply(lambda x: int(x/0.5)*0.5)
+        if tf0: 
+            df = df[df.tfreq.isin(tf0)]
+        v, tf = np.array(df.v), np.array(df.unique_tfreq)
+        v[tf==10.5] *= -1
+        df.v = v
+        radar.df = df
+        radars[rad] = radar
+    
+    fan = Fan(
+        rads, dates[0], f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats, nrows=3, ncols=4,sup_title=False,
+        mark_lon=mark_lon
+    )
+    for j, date in enumerate(dates):
+        utils.setsize(12)
+        fan.date = date
+        ax = fan.add_axes(add_coords=j==0, add_time=False)
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="darkgreen", lw=0.5, #transform=fan.proj
+        )
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5, #transform=fan.proj
+        )
+        for i, rad in enumerate(rads):
+            o = radars[rad].df.copy()
+            o = o[
+                (o.time>=date)
+                & (o.time<=date+dt.timedelta(minutes=1))
+            ]
+            # o = o[o.bmnum==7]
+            fan.generate_fov(
+                rad, o, ax=ax, cbar=((j==3) * (i==0))|((j==7) * (i==1)),
+                eclipse_cb=j==len(dates)-1, 
+                # eclipse_cb=True,
+                p_max=p_max[i], p_min=p_min[i],
+                xOffset=XO[i], yOffset=YO[i], 
+                maxGate=100 if rad=="fir" else 75,
+                label=labels[i], col=colors[i],
+                cmap=cmaps[i],
+            )
+            if j==0:
+                ax.text(
+                    -0.05, 0.05, "Ch[fir]: [1, 2]",
+                    ha="left", va="bottom",
+                    transform=ax.transAxes, fontsize="xx-small",
+                    rotation=90
+                )
+                ax.text(
+                    0.95, 1.05, f"$f_0$[fir]= {tfreq[0] if tfreq[0] else 'all'} MHz",
+                    ha="right", va="bottom",
+                    transform=ax.transAxes, fontsize="xx-small",
+                )
+            if j==4:
+                ax.text(
+                    -0.05, 0.05, "Ch[mcm]: [1]",
+                    ha="left", va="bottom",
+                    transform=ax.transAxes, fontsize="xx-small",
+                    rotation=90
+                )
+                ax.text(
+                    0.95, 1.01, f"$f_0$[mcm]= all MHz",
+                    ha="right", va="bottom",
+                    transform=ax.transAxes, fontsize="xx-small",
+                )
+        ax.text(0.05, 1.05, tags[j] + f" {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        # # ax.add_square_grid(-60,-85,10)
+        
+    fan.fig.subplots_adjust(hspace=0.1, wspace=0.1)
+    fan.save(f"figures_2021_Special/{date.strftime('%Y%m%d%H%M')}.png")
+    fan.close()
+    return
+
+def create_map_plots(
+    extent=[-180, 180, -90, -50], 
+    plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
+    central_longitude=80, central_latitude=-70.0,
+):
+    from readmix import get_2D_data, get_sd_data
+    fan = Fan(
+        [], dt.datetime(2021,12,4), f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats, nrows=3, ncols=4, sup_title=False,
+        mark_lon=mark_lon
+    )
+    dates = [
+        dt.datetime(2021, 12, 4, 6),
+        dt.datetime(2021, 12, 4, 6, 30),
+        dt.datetime(2021, 12, 4, 7, 0),
+        dt.datetime(2021, 12, 4, 7, 30),
+        dt.datetime(2021, 12, 4, 7, 40),
+        dt.datetime(2021, 12, 4, 7, 50),
+        dt.datetime(2021, 12, 4, 8),
+        dt.datetime(2021, 12, 4, 8, 14),
+        dt.datetime(2021, 12, 4, 8, 30),
+        dt.datetime(2021, 12, 4, 8, 44),
+        dt.datetime(2021, 12, 4, 9),
+        dt.datetime(2021, 12, 4, 9, 30)
+    ]
+    for j, date in enumerate(dates):
+        utils.setsize(12)
+        fan.date = date
+        ax = fan.add_axes(add_coords=j==0, add_time=False)
+        ax.overlay_eclipse(j==len(dates)-1)
+        ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        if j==0:
+            ax.text(
+                -0.05, 0.05, "",
+                ha="left", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+                rotation=90
+            )
+            ax.text(
+                0.95, 1.05, "",
+                ha="right", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+            )
+        data, lats, lons = get_2D_data(date, var="J_par")
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            lons, 
+            lats
+        )
+        data = np.ma.masked_where(data==0, data)
+        im = ax.contourf(
+            XYZ[:, :, 0], XYZ[:, :, 1], data,
+            cmap="jet_r", alpha=0.8, levels=np.arange(-1.2, 1.2, 0.6),
+            extend="both"
+        )
+        if j==3:
+            utils.setsize(10)
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = ax.inset_axes(cpos, transform=ax.transAxes)
+            cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            utils.setsize(10)
+            cb.set_label(r"$J_{||}$, $\mu A/m^2$")
+
+        data, lats, lons = get_sd_data(date)
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            lons, 
+            lats
+        )
+        data = np.ma.masked_where(data==0., data)
+        im = ax.contourf(
+            XYZ[:, :, 0], XYZ[:, :, 1], data,
+            cmap="Spectral",
+            alpha=0.5,
+            levels=np.arange(-45, 46, 15),
+        )
+        if j==7:
+            utils.setsize(10)
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = ax.inset_axes(cpos, transform=ax.transAxes)
+            cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            utils.setsize(10)
+            cb.set_label(r"$\Phi_0$, kV")
+
+
+    fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
+    fan.save(f"figures_2021_Special/Maps.png")
+    fan.close()
+    return
