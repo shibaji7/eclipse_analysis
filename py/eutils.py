@@ -260,6 +260,17 @@ def get_fov_eclipse(
             p[i,j] = e.create_eclipse_shadow(date, lats[i,j], lons[i,j], alt)
     return p
 
+def get_fov_eclipse_contours(
+    date, lats, lons, alts=np.arange(100, 400)
+):
+    from tqdm import tqdm
+    e = Eclipse()
+    p = np.nan * np.zeros((len(lats), len(alts)))
+    for i in tqdm(range(len(lats))):
+        for j in tqdm(range(len(alts))):
+            p[i,j] = e.create_eclipse_shadow(date, lats[i], lons[i], alts[j])
+    return p
+
 def get_w2naf_eclipse(
     date, alts=np.array([300]),
     lats=np.linspace(0,90,num=90*2),

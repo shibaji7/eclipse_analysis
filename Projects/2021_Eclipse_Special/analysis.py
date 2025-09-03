@@ -26,7 +26,7 @@ from plotutils import (
 )
 
 
-methods = ["plot_maps"]
+methods = ["others"]
 setup()
 
 if "others" in methods:

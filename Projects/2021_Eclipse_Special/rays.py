@@ -337,9 +337,9 @@ class PlotRays(object):
             o, cmap, label, norm = (
                 getattr(self, kind),
                 # "PuOr",
-                "plasma",
+                "YlGnBu",
                 r"$f_0$ [MHz]",
-                colors.Normalize(4.5, 5.5),
+                colors.Normalize(4, 7),
             )
         if kind == "edens":
             o, cmap, label, norm = (
@@ -365,7 +365,7 @@ class PlotRays(object):
 
     def lay_rays(
         self,
-        xlim_max=4000,
+        xlim_max=3000,
         kind="pf",
         zoomed_in=[],
         lcolor="k",
@@ -379,6 +379,7 @@ class PlotRays(object):
         text="(A)",
         rto=None,
         ped_angles=[],
+        lay_eclipse=False,
     ):
         self.rto = rto if rto else self.rto
         self.set_rto()
@@ -386,27 +387,45 @@ class PlotRays(object):
 
         o, cmap, label, norm = self.get_parameter(kind)
         ## Check needs interpolation
-        if self.xtolim <= xlim_max:
-            index_xlim = np.abs(self.xtolim - self.rto.bearing.dist.ravel()).argmin()
-            dist, height = (
-                self.rto.bearing.dist.ravel(),
-                self.rto.bearing.heights.ravel(),
-            )
-            d = self.rto.bearing.dist.ravel()[1] - self.rto.bearing.dist.ravel()[0]
-            dist_ext = np.arange(self.xtolim, xlim_max, d)
-            o_ext = np.array(
-                [o[:, index_xlim].tolist() for i in range(len(dist_ext))]
-            ).T
-            dist = np.concatenate((dist[:index_xlim], dist_ext))
-            o = np.concatenate((o[:, :index_xlim], o_ext), axis=1)
-        else:
-            dist, height = (
-                self.rto.bearing.dist.ravel(),
-                self.rto.bearing.heights.ravel(),
-            )
+        # if self.xtolim <= xlim_max:
+        #     index_xlim = np.abs(self.xtolim - self.rto.bearing.dist.ravel()).argmin()
+        #     dist, height = (
+        #         self.rto.bearing.dist.ravel(),
+        #         self.rto.bearing.heights.ravel(),
+        #     )
+        #     d = self.rto.bearing.dist.ravel()[1] - self.rto.bearing.dist.ravel()[0]
+        #     dist_ext = np.arange(self.xtolim, xlim_max, d)
+        #     o_ext = np.array(
+        #         [o[:, index_xlim].tolist() for i in range(len(dist_ext))]
+        #     ).T
+        #     dist = np.concatenate((dist[:index_xlim], dist_ext))
+        #     o = np.concatenate((o[:, :index_xlim], o_ext), axis=1)
+        # else:
+        dist, height = (
+            self.rto.bearing.dist.ravel(),
+            self.rto.bearing.heights.ravel(),
+        )
         dist, height = np.meshgrid(dist, height)
+        
         if self.arc:
             height = self.get_arc_heights(height, dist)
+        
+        from eutils import get_fov_eclipse_contours
+        p = get_fov_eclipse_contours(
+            self.rto.event, 
+            self.rto.bearing.lat.ravel(), 
+            self.rto.bearing.lon.ravel()
+        )
+        p[p>1] = 0
+        if lay_eclipse:
+            CS = ax.contour(
+                dist, 
+                height,
+                p[:len(dist),:].T, colors="k",
+                levels=[0.3, 0.6, 1],
+                zorder=4
+            )
+            ax.clabel(CS, CS.levels, fmt="%.1f", fontsize=6)
         im = ax.pcolormesh(
             dist,
             height,
@@ -467,17 +486,27 @@ class PlotRays(object):
             ray_label = ray_data["ray_label"].iloc[0]
             lw = self.lw
             alpha = 0.3
-            if ray_path_data.ray_label.iloc[0] == -2:
+            if ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]<1000:
+                lcolor = "m"
+            elif ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]>1000:
+                lcolor, alpha, lw = "darkgreen", 1, 1
+            elif ray_path_data.ray_label.iloc[0] == -2:
                 lcolor = "r"
-            elif ray_path_data.ray_label.iloc[0] == 1:
+            elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]==0:
                 lcolor = "k"
+            elif ray_label == 1 and ray_path_data.height.iloc[-1]>100:
+                lcolor, alpha, lw = "darkgreen", 1, 1
             if len(ped_angles) > 0:
                 if np.round(ray_path_data.elv.iloc[0], 1) in ped_angles:
                     lcolor, alpha, lw = "darkgreen", 1, 1
             ax.plot(th, r, c=lcolor, zorder=3, alpha=alpha, ls="-", lw=lw)
             col = "k" if ray_label == 1 else "r"
-            if ray_label in [-1, 1]:
-                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=3, color=col)
+            if ray_label == 1 and ray_path_data.height.iloc[-1]==0:
+                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="k", zorder=4)
+            elif ray_label == -1 and ray_path_data.ground_range.iloc[-1]<1000:
+                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=0.2, color="m", zorder=4)
+            elif (ray_label == 1 and ray_path_data.height.iloc[-1]>100) or (ray_label == -1 and ray_path_data.ground_range.iloc[-1]>1000):
+                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=1, color="darkgreen", zorder=4)
         if add_time:
             stitle = "%s UT" % self.event.strftime("%Y-%m-%d %H:%M")
             ax.text(
@@ -490,7 +519,7 @@ class PlotRays(object):
                 fontdict={"size": 8, "fontweight": "bold"},
             )
         if add_tag:
-            stitle = f"Model: GEMINI / {self.rad}-{'%02d'%self.beam}, $f_0$={self.rto.frequency/1e6} MHz"
+            stitle = f"Model: GITM / {self.rad}-{'%02d'%(self.beam+7)}, $f_0$={self.rto.frequency/1e6} MHz"
             ax.text(
                 0.05,
                 1.05,
@@ -504,7 +533,7 @@ class PlotRays(object):
         ax.text(
             0.05,
             0.95,
-            text,
+            text + r" $\mathcal{O}=%0.2f$"%np.max(p),
             ha="left",
             va="center",
             transform=ax.transAxes,
@@ -710,7 +739,7 @@ class PlotChannels(object):
             s=50,
             marker="s",
             norm=colors.Normalize(0.82, 0.95),
-            cmap="plasma",
+            cmap="YlGnBu",
             alpha=0.7,
         )
         ax.set_xlim(right=xlim_max)
