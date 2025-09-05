@@ -425,13 +425,13 @@ def create_map_plots(
     plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
     central_longitude=80, central_latitude=-70.0,
 ):
-    from readmix import get_2D_data, get_sd_data
+    from readmix import get_2D_data, get_sd_data, get_imfs
     fan = Fan(
         [], dt.datetime(2021,12,4), f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
         plt_lats=plt_lats, nrows=3, ncols=4, sup_title=False,
-        mark_lon=mark_lon
+        mark_lon=mark_lon, coord="geo"
     )
     dates = [
         dt.datetime(2021, 12, 4, 6),
@@ -452,7 +452,6 @@ def create_map_plots(
         fan.date = date
         ax = fan.add_axes(add_coords=j==0, add_time=False)
         ax.overlay_eclipse(j==len(dates)-1)
-        ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
         if j==0:
             ax.text(
                 -0.05, 0.05, "",
@@ -474,9 +473,10 @@ def create_map_plots(
         data = np.ma.masked_where(data==0, data)
         im = ax.contourf(
             XYZ[:, :, 0], XYZ[:, :, 1], data,
-            cmap="jet_r", alpha=0.8, levels=np.arange(-1.2, 1.2, 0.6),
-            extend="both"
+            alpha=0.8, levels=np.arange(-1.2, 1.3, 0.4),
+            extend="both", zorder=6, cmap="Spectral"
         )
+        
         if j==3:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
@@ -486,25 +486,34 @@ def create_map_plots(
             cb.set_label(r"$J_{||}$, $\mu A/m^2$")
 
         data, lats, lons = get_sd_data(date)
+        imfs = get_imfs(date)
+        print(imfs.head())
         XYZ = fan.proj.transform_points(
             fan.geo, 
             lons, 
             lats
         )
         data = np.ma.masked_where(data==0., data)
-        im = ax.contourf(
+        im = ax.pcolormesh(
             XYZ[:, :, 0], XYZ[:, :, 1], data,
-            cmap="Spectral",
-            alpha=0.5,
-            levels=np.arange(-45, 46, 15),
+            cmap="RdBu",
+            alpha=0.6,
+            vmax=45, vmin=-45
+            # levels=np.arange(-45, 46, 15),
         )
+        txt = fr"$\phi_0$={np.round(np.max(data)-np.min(data),1)} kV" + "\n"
+        txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
+        txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
+        txt = txt + fr"n={np.round(imfs['nvecs'].iloc[0],1)}"+ "\n"
+        ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        ax.text(0.05, 0.95, txt, ha="left", va="top", transform=ax.transAxes, fontdict={"size": 6, "color": "k"})
         if j==7:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
-            cb.set_label(r"$\Phi_0$, kV")
+            cb.set_label(r"$\Phi$ [TS18], kV")
 
 
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)

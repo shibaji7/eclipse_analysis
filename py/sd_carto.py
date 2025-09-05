@@ -204,10 +204,10 @@ class SDCarto(GeoAxes):
             for _ni, _list in enumerate(geo_coords):
                 mlon_check_jump_list = []
                 split_mag_list = None
-                if len(_list) == 1:
-                    _loop_list = _list[0]
-                else:
+                if type(_list[0]) == tuple:
                     _loop_list = _list
+                else:
+                    _loop_list = tuple([_list,])
                 for _ngc, _gc in enumerate(_loop_list):
                     _mc = aacgmv2.get_aacgm_coord(
                         _gc[1], _gc[0], out_height, self.plot_date
@@ -471,10 +471,13 @@ class SDCarto(GeoAxes):
 
     def overlay_eclipse(self, cb=True):
         d = load_eclipse_datasets(self.plot_date)
+        Of, sza = d.of.values, d.sza.values
+        Of[Of>=0.85] = np.nan
+        Of[sza>90] = np.nan
         cs = self.contour(
             d.glon,
             d.glat,
-            1-d.of,
+            1-Of,
             transform=cartopy.crs.PlateCarree(),
             colors="k", 
             linewidths=0.5,
@@ -484,7 +487,7 @@ class SDCarto(GeoAxes):
         im = self.contourf(
             d.glon,
             d.glat,
-            1-d.of,
+            1-Of,
             transform=cartopy.crs.PlateCarree(),
             cmap="gray_r", 
             alpha=0.6,

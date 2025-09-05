@@ -115,8 +115,8 @@ class Fan(object):
         gl.xformatter = LONGITUDE_FORMATTER
         gl.yformatter = LATITUDE_FORMATTER
         gl.n_steps = 90
-        ax.mark_latitudes(plt_lats, fontsize=6, color="k", lon_location=self.mark_lon)
-        ax.mark_longitudes(mark_lons, fontsize=6, color="k")
+        # ax.mark_latitudes(plt_lats, fontsize=6, color="k", lon_location=self.mark_lon)
+        # ax.mark_longitudes(mark_lons, fontsize=6, color="k")
         self.proj = proj
         self.geo = cartopy.crs.PlateCarree()
         if add_coords:

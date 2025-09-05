@@ -26,12 +26,12 @@ from plotutils import (
 )
 
 
-methods = ["others"]
+methods = ["plot_maps"]
 setup()
 
 if "others" in methods:
-    # create_mix_ts()
-    create_rays()
+    create_mix_ts()
+    # create_rays()
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
