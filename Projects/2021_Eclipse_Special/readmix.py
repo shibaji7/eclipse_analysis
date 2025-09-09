@@ -20,7 +20,7 @@ def read_mix(file_path=None):
     ds = open_dataset(file_path)
     return ds
 
-def get_pot_drop(file_path=None, var="Pot"):
+def get_pot_drop(file_path=None, var="J_par"):
     ds = read_mix(file_path)
     mjd_epoch = dt.datetime(1858, 11, 17, 0, 0, 0)
     time = [mjd_epoch+dt.timedelta(d) for d in ds.time.values]

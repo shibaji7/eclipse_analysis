@@ -259,32 +259,100 @@ def create_fan_plots(
     return
 
 def create_mix_ts():
-    from readmix import get_pot_drop
+    from readmix import get_pot_drop, parse_pot_data
     from plot import RangeTimePlot
     import matplotlib.dates as mdates
     from matplotlib.dates import DateFormatter
 
-    Phi0, time = get_pot_drop()
+    for rad, tf0, ch in zip(["mcm"], [None], [None]):
+        radar = Radar(rad, [dt.datetime(2021,12,4), dt.datetime(2021,12,5)], type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        if ch:
+            df = df[df.channel==ch]
+        df["unique_tfreq"] = df.tfreq#.apply(lambda x: int(x/0.5)*0.5)
+        if tf0: 
+            df = df[df.tfreq.isin(tf0)]
+        v, tf = np.array(df.v), np.array(df.unique_tfreq)
+        v[tf==10.5] *= -1
+        df.v = v
+        radar.df = df
+
+    Jpar, time = get_pot_drop()
+    Phi0, _ = get_pot_drop(None, "Pot")
 
     rti = RangeTimePlot(
-        100, [], 
+        100, [dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)], 
         # r"MIX $\phi$, in kV during Dec 4, 2021 Eclipse", 
         "",
-        num_subplots=1
+        num_subplots=3
     )
-    ax = rti._add_axis()
+    ax = rti.addParamPlot(
+        "mcm", radar.df, 7, "04 December, 2021", 
+        p_max=600, p_min=100,
+        cmap="GnBu", cbar=True,
+        xlabel="",
+    )
+    import eutils
+    p = eutils.get_rti_eclipse(
+        [dt.datetime(2021,12,4,5)+dt.timedelta(seconds=30*i) for i in range(5*60*2)],
+        radar.get_lat_lon_along_beam(7)[0], radar.get_lat_lon_along_beam(7)[1]
+    )
+    cs = ax.contour(
+        [dt.datetime(2021,12,4,5)+dt.timedelta(seconds=30*i) for i in range(5*60*2)],
+        np.arange(76),
+        p.T,
+        colors="k", 
+        linewidths=0.5,
+        levels=[0.2, 0.4, 0.6, 0.75, 1.0],
+        zorder=1, alpha=0.6,
+    )
+    ax.clabel(cs, inline=True, fontsize=6, fmt='%.2f')
+    ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
+    ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
+    ax.text(0.05, 0.95, "(a) mcm/7", ha="left", va="center", transform=ax.transAxes)
 
+    o = parse_pot_data()
+    ax = rti._add_axis()
     ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
-    hours = mdates.HourLocator(byhour=range(0, 24, 6))
+    hours = mdates.HourLocator(byhour=range(0, 24, 1))
+    ax.xaxis.set_major_locator(hours)
+    ax.set_ylabel(r"$\Phi_0$, $kV$", fontdict={"size":12})
+    ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+    ax.plot(o["time, UT"], o["pot_drop, kV"], "ko", ms=1)
+    ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
+    ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
+    ax.text(0.05, 0.95, "(b) SuperDARN fitted CPCP [TS18]", ha="left", va="center", transform=ax.transAxes)
+
+    ax = rti._add_axis()
+    ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+    hours = mdates.HourLocator(byhour=range(0, 24, 1))
     ax.xaxis.set_major_locator(hours)
     ax.set_xlabel("Time, UT", fontdict={"size":12})
-    ax.set_ylabel(r"$\Phi_0$, kV", fontdict={"size":12})
-    # ax.set_ylabel(r"$J_p$, $\mu A/m^2$", fontdict={"size":12})
-    ax.set_xlim(dt.datetime(2021, 12, 4), dt.datetime(2021, 12, 5))
-    ax.plot(time, Phi0, "ko", ms=1)
+    ax.set_ylabel(r"$J_{||}$, $\mu A/m^2$", fontdict={"size":12})
+    ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+    ax.plot(time, Jpar, "ko", ms=1)
+    ax.text(0.05, 0.95, "(c) AMPERE FACs, CPCP (GITM+AMPERE)", ha="left", va="center", transform=ax.transAxes)
+    ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
+    ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
+    ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
+    ax = ax.twinx()
+    ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+    hours = mdates.HourLocator(byhour=range(0, 24, 1))
+    ax.xaxis.set_major_locator(hours)
+    ax.set_ylabel(r"$\Phi_0$, $kV$", fontdict={"size":12, "color":"r"})
+    ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+    ax.plot(time, Phi0, "ro", ms=1)
     rti.save("figures_2021_Special/rti_mix.png")
     rti.close()
-    print(">>>>>>>>>>>>>>>>")
     return
 
 def create_rays():
@@ -326,7 +394,7 @@ def create_fan_plots_stack(
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)", "(L)"],
     p_max=[500], p_min=[200], mark_lon=120, YO=[2, -3], XO=[-5, -1],
     labels = ["Velocity(fir), m/s", "Velocity(mcm), m/s"],
-    colors= ["r", "b"], cmaps=[None, "Blues"]
+    colors= ["r", "b"], cmaps=["RdBu", "GnBu"]
 ):
     radars = dict()
     from readdmsp import read_1D_dmsp_datasets
@@ -474,7 +542,7 @@ def create_map_plots(
         im = ax.contourf(
             XYZ[:, :, 0], XYZ[:, :, 1], data,
             alpha=0.8, levels=np.arange(-1.2, 1.3, 0.4),
-            extend="both", zorder=6, cmap="Spectral"
+            extend="both", zorder=6, cmap="RdBu"
         )
         
         if j==3:
@@ -487,19 +555,18 @@ def create_map_plots(
 
         data, lats, lons = get_sd_data(date)
         imfs = get_imfs(date)
-        print(imfs.head())
         XYZ = fan.proj.transform_points(
             fan.geo, 
             lons, 
             lats
         )
         data = np.ma.masked_where(data==0., data)
-        im = ax.pcolormesh(
+        im = ax.contourf(
             XYZ[:, :, 0], XYZ[:, :, 1], data,
-            cmap="RdBu",
-            alpha=0.6,
-            vmax=45, vmin=-45
-            # levels=np.arange(-45, 46, 15),
+            cmap="cool",
+            alpha=0.8,
+            # vmax=45, vmin=-45
+            levels=np.arange(-45, 46, 15),
         )
         txt = fr"$\phi_0$={np.round(np.max(data)-np.min(data),1)} kV" + "\n"
         txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"

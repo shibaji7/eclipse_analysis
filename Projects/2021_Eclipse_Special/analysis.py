@@ -26,7 +26,11 @@ from plotutils import (
 )
 
 
-methods = ["plot_maps"]
+methods = [
+    # "plot_maps", 
+    # "fan_plot_fir", 
+    "others"
+]
 setup()
 
 if "others" in methods:
@@ -72,7 +76,7 @@ if "fan_plot_fir" in methods:
         #extent=[-40, -120, -90, -50], 
         extent=[-180, 180, -90, -50], 
         plt_lats = np.arange(-90, -49, 10), 
-        p_min=[-50, 100], p_max=[50, 400], mark_lon=-50,
+        p_min=[-50, 100], p_max=[50, 600], mark_lon=-50,
     )
 
 if "fan_plot_mcm" in methods:
