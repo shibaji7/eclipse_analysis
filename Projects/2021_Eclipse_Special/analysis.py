@@ -27,9 +27,9 @@ from plotutils import (
 
 
 methods = [
-    # "plot_maps", 
+    "plot_maps", 
     # "fan_plot_fir", 
-    "others"
+    # "others"
 ]
 setup()
 
