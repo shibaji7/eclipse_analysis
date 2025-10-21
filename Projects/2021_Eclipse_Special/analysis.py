@@ -23,12 +23,14 @@ from plotutils import (
     create_mix_ts, create_rays,
     create_fan_plots_stack,
     create_map_plots,
+    plot_hall_conductivity,
 )
 
 
 methods = [
     "plot_fov",
     "plot_maps", 
+    "plot_hall_conductivity",
     # "fan_plot_fir", 
     # "others"
 ]
@@ -100,6 +102,9 @@ if "fan_plot_mcm" in methods:
 
 if "plot_maps" in methods:
     create_map_plots()
+
+if "plot_hall_conductivity" in methods:
+    plot_hall_conductivity()
 
 # if "plot_rti_analysis" in methods:
 #     calculate_decay_rate

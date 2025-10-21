@@ -42,16 +42,16 @@ def generate_fov_overview(
     ax.overlay_eclipse(True)
     # xyz = fan.proj.transform_points(cartopy.crs.PlateCarree(), [], newglat.T)
     ax.scatter(
-        -164.24,-74.62, 
+        164.2255,-74.6243, 
         s=20,
         marker="^",
         color="k",
         zorder=2,
-        transform=cartopy.crs.PlateCarree(),
+        transform=fan.geo,
         lw=0.8,
         alpha=0.8,
     )
-    ax.text(-164.24-2, -74.62+7, "Jang Bogo", transform=cartopy.crs.PlateCarree(), ha="center", va="bottom", fontdict={"color": "k", "size": "x-small"}, alpha=0.8)
+    ax.text(164.24-2, -74.62+2, "Jang Bogo", transform=cartopy.crs.PlateCarree(), ha="center", va="bottom", fontdict={"color": "k", "size": "x-small"}, alpha=0.8)
     fan.save(f"figures_2021_Special/fov.{date.strftime('%Y%m%d%H%M')}.png")
     fan.close() 
     return
@@ -552,7 +552,7 @@ def create_map_plots(
             "mcm", o, ax=ax, cbar=(j==7),
             # eclipse_cb=j==len(dates)-1, 
             eclipse_cb=False,
-            p_max=600, p_min=200,
+            p_max=500, p_min=300,
             xOffset=-1, yOffset=-3, 
             maxGate=75,
             label="Velocity, m/s", col="b",
@@ -606,7 +606,7 @@ def create_map_plots(
         )
         ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5)
         ax.scatter(
-            -164.24,-74.62, 
+            164.24,-74.62, 
             s=20,
             marker="^",
             color="k",
@@ -619,9 +619,9 @@ def create_map_plots(
         hv = get_hv_by_date(date)
         print("Digisonde HV:", hv)
         q = ax.quiver(
-            np.array([[-164.24]]), 
+            np.array([[164.24]]), 
             np.array([[-74.62]]),
-            np.array([[hv["VYF"]]]), np.array([[hv["VXF"]]]), 
+            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]), 
             transform=cartopy.crs.PlateCarree(),
             headwidth=2, headlength=2, scale=1500, color="m", 
             zorder=3
@@ -674,5 +674,182 @@ def create_map_plots(
 
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
     fan.save(f"figures_2021_Special/Maps.png")
+    fan.close()
+    return
+
+
+def plot_hall_conductivity(extent=[-180, 180, -90, -50], 
+    plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
+    central_longitude=80, central_latitude=-70.0,
+):
+    # Ream MCM and DMSP
+    from readdmsp import read_1D_dmsp_datasets
+    dmspdata_south_boundary = read_1D_dmsp_datasets()
+    dates = [dt.datetime(2021,12,4,6),dt.datetime(2021,12,4,10)]
+    radar = Radar("mcm", dates, type="fitacf")
+    radar.calculate_ground_range()
+    df = radar.df.copy()
+    df["unique_tfreq"] = df.tfreq
+    radar.df = df
+    # Read others
+    from readmix import get_2D_data, get_sd_data, get_imfs
+    fan = Fan(
+        [], dt.datetime(2021,12,4), f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats, nrows=3, ncols=4, sup_title=False,
+        mark_lon=mark_lon, coord="geo"
+    )
+    dates = [
+        dt.datetime(2021, 12, 4, 6),
+        dt.datetime(2021, 12, 4, 6, 30),
+        dt.datetime(2021, 12, 4, 7, 0),
+        dt.datetime(2021, 12, 4, 7, 30),
+        dt.datetime(2021, 12, 4, 7, 40),
+        dt.datetime(2021, 12, 4, 7, 50),
+        dt.datetime(2021, 12, 4, 8),
+        dt.datetime(2021, 12, 4, 8, 14),
+        dt.datetime(2021, 12, 4, 8, 30),
+        dt.datetime(2021, 12, 4, 8, 44),
+        dt.datetime(2021, 12, 4, 9),
+        dt.datetime(2021, 12, 4, 9, 30)
+    ]
+    for j, date in enumerate(dates):
+        o = radar.df.copy()
+        o = o[
+            (o.time>=date)
+            & (o.time<=date+dt.timedelta(minutes=1))
+        ]
+        utils.setsize(12)
+        fan.date = date
+        ax = fan.add_axes(add_coords=j==0, add_time=False)
+        ax.overlay_eclipse(j==len(dates)-1)
+
+        fan.generate_fov(
+            "mcm", o, ax=ax, cbar=(j==7),
+            # eclipse_cb=j==len(dates)-1, 
+            eclipse_cb=False,
+            p_max=500, p_min=300,
+            xOffset=-1, yOffset=-3, 
+            maxGate=75,
+            label="Velocity, m/s", col="b",
+            cmap="GnBu",
+        )
+
+        if j==0:
+            ax.text(
+                -0.05, 0.05, "",
+                ha="left", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+                rotation=90
+            )
+            ax.text(
+                0.95, 1.05, "",
+                ha="right", va="bottom",
+                transform=ax.transAxes, fontsize="xx-small",
+            )
+        data, lats, lons = get_2D_data(date, var="Hall")
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            lons, 
+            lats
+        )
+        data = np.ma.masked_where(data==0, data)
+        im = ax.pcolor(
+            XYZ[:, :, 0], XYZ[:, :, 1], data,
+            alpha=0.5, vmax=10, vmin=0,
+             zorder=2, cmap="Spectral_r"
+        )
+        
+        if j==3:
+            utils.setsize(10)
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = ax.inset_axes(cpos, transform=ax.transAxes)
+            cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            utils.setsize(10)
+            cb.set_label(r"$\Sigma_H [ASHLEY]$, $kV$")
+        imfs = get_imfs(date)
+
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="darkgreen", lw=0.5,)
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5)
+        ax.scatter(
+            164.24,-74.62, 
+            s=20,
+            marker="^",
+            color="k",
+            zorder=2,
+            transform=cartopy.crs.PlateCarree(),
+            lw=0.8,
+            alpha=0.8,
+        )
+        from read_digisonde import get_hv_by_date
+        hv = get_hv_by_date(date)
+        print("Digisonde HV:", hv)
+        q = ax.quiver(
+            np.array([[164.24]]), 
+            np.array([[-74.62]]),
+            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]), 
+            transform=cartopy.crs.PlateCarree(),
+            headwidth=2, headlength=2, scale=1500, color="m", 
+            zorder=3
+        )
+        if j==0:
+            qk = ax.quiverkey(
+                q,
+                X=1.05,
+                Y=0.8,
+                U=500,
+                angle=90,
+                label="500 m/s",
+                labelpos="E",
+                coordinates="axes",
+                labelsep=0.05
+            )
+            # Shrink and rotate the quiver key label for compact layout
+            qk.text.set_fontsize("x-small")
+            qk.text.set_rotation(90)
+
+        # data, lats, lons = get_sd_data(date)
+        # XYZ = fan.proj.transform_points(
+        #     fan.geo, 
+        #     lons, 
+        #     lats
+        # )
+        # data = np.ma.masked_where(data==0., data)
+        # im = ax.contourf(
+        #     XYZ[:, :, 0], XYZ[:, :, 1], data,
+        #     cmap="cool",
+        #     alpha=0.8,
+        #     # vmax=45, vmin=-45
+        #     levels=np.arange(-45, 46, 15),
+        # )
+        txt = fr"$\phi_0$={np.round(np.max(data)-np.min(data),1)} kV" + "\n"
+        txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
+        txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
+        # txt = txt + fr"n={np.round(imfs['nvecs'].iloc[0],1)}"+ "\n"
+        txt = txt + (r"$Vz_{jb}$=%.1f m/s"%(hv['VZF']))
+        ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        ax.text(0.05, 0.95, txt, ha="left", va="top", transform=ax.transAxes, fontdict={"size": 6, "color": "k"})
+        # if j==7:
+        #     utils.setsize(10)
+        #     cpos = [1.05, 0.1, 0.025, 0.6]
+        #     cax = ax.inset_axes(cpos, transform=ax.transAxes)
+        #     cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+        #     utils.setsize(10)
+        #     cb.set_label(r"$\Phi$ [TS18], kV")
+
+
+    fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
+    fan.save(f"figures_2021_Special/Cond_Maps.png")
     fan.close()
     return
