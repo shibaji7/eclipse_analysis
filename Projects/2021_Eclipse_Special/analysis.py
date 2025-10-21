@@ -27,6 +27,7 @@ from plotutils import (
 
 
 methods = [
+    "plot_fov",
     "plot_maps", 
     # "fan_plot_fir", 
     # "others"
