@@ -24,20 +24,22 @@ from plotutils import (
     create_fan_plots_stack,
     create_map_plots,
     plot_hall_conductivity,
+    create_Digisonde_plots,
 )
 
 
 methods = [
-    "plot_fov",
-    "plot_maps", 
-    "plot_hall_conductivity",
+    # "plot_fov",
+    # "plot_maps", 
+    # "plot_hall_conductivity",
     # "fan_plot_fir", 
-    # "others"
+    "others"
 ]
 setup()
 
 if "others" in methods:
     create_mix_ts()
+    create_Digisonde_plots()
     # create_rays()
 
 if "plot_fov" in methods:

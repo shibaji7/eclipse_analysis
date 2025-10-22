@@ -327,20 +327,37 @@ def create_mix_ts():
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
     ax.text(0.05, 0.95, "(a) mcm/7", ha="left", va="center", transform=ax.transAxes)
 
-    o = parse_pot_data()
+    from read_digisonde import consolidate_horizontal_data
+    dates, vhf, vhf_err, vhf_base, vhf_base_err, lat, lon, time_dig, eof = consolidate_horizontal_data()
+    # o = parse_pot_data()
     ax = rti._add_axis()
     ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
     hours = mdates.HourLocator(byhour=range(0, 24, 1))
     ax.xaxis.set_major_locator(hours)
-    ax.set_ylabel(r"$\Phi_0$, $kV$", fontdict={"size":12})
+    ax.set_ylabel(r"$\mathcal{V}_H$, $m/s$", fontdict={"size":12, "color":"b"})
     ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
-    ax.plot(o["time, UT"], o["pot_drop, kV"], "ko", ms=1)
+    ax.errorbar(dates, vhf, yerr=vhf_err*.15, color="b", fmt="o", ms=1, elinewidth=0.5)
+    ax.errorbar(dates, vhf_base, yerr=vhf_base_err*.15, color="k", fmt="^", ms=1, elinewidth=0.5)
+    ax.tick_params(axis="y", colors="b",)
+    ax.spines["right"].set_color("b")
+    ax.set_ylim(-100, 700)
+    # ax.plot(o["time, UT"], o["pot_drop, kV"], "ko", ms=1)
     ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
     ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
-    ax.text(0.05, 0.95, "(b) SuperDARN fitted CPCP [TS18]", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, r"Jang Bogo/$(\theta,\phi)=(74.6^{\circ}S, 164.2^{\circ}E)$", ha="left", va="center", transform=ax.transAxes)
+    tax = ax.twinx()
+    tax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+    tax.xaxis.set_major_locator(hours)
+    tax.set_ylabel(r"EOF / $\mathcal{O}$", fontdict={"size":12, "color":"r"})
+    tax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+    tax.tick_params(axis="y", colors="r",)
+    tax.spines["right"].set_color("r")
+    tax.plot(time_dig, eof, "r-", lw=0.8)
+    tax.set_ylim(0, 1.2)
+    
 
     ax = rti._add_axis()
     ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
@@ -350,19 +367,23 @@ def create_mix_ts():
     ax.set_ylabel(r"$J_{||}$, $\mu A/m^2$", fontdict={"size":12})
     ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
     ax.plot(time, Jpar, "ko", ms=1)
-    ax.text(0.05, 0.95, "(c) AMPERE FACs, CPCP (GITM+AMPERE)", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, "(c) AMPERE FACs, CPCP (pyMIX)", ha="left", va="center", transform=ax.transAxes)
     ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
     ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
+    ax.set_ylim(0, 4)
     ax = ax.twinx()
     ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
     hours = mdates.HourLocator(byhour=range(0, 24, 1))
+    ax.tick_params(axis="y", colors="r",)
+    ax.spines["right"].set_color("r")
     ax.xaxis.set_major_locator(hours)
     ax.set_ylabel(r"$\Phi_0$, $kV$", fontdict={"size":12, "color":"r"})
     ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
     ax.plot(time, Phi0, "ro", ms=1)
+    ax.set_ylim(0, 80)
     rti.save("figures_2021_Special/rti_mix.png")
     rti.close()
     return
@@ -853,4 +874,60 @@ def plot_hall_conductivity(extent=[-180, 180, -90, -50],
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
     fan.save(f"figures_2021_Special/Cond_{cond}_Maps.png")
     fan.close()
+    return
+
+
+def create_Digisonde_plots():
+    from plot import RangeTimePlot
+    import matplotlib.dates as mdates
+    from matplotlib.dates import DateFormatter
+    from read_digisonde import consolidate_data
+
+    vxf, vyf, vzf = (
+        consolidate_data("VXF"), 
+        consolidate_data("VYF"), 
+        consolidate_data("VZF")
+    )
+
+    rti = RangeTimePlot(
+        100, [dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)], 
+        # r"MIX $\phi$, in kV during Dec 4, 2021 Eclipse", 
+        "",
+        num_subplots=3
+    )
+
+    vhm = np.sqrt(vxf[1]**2 + vyf[1]**2)
+    # vht = 
+    vhf = (vxf[0], vhm, )
+    ranges = [(-100, 600), (-300, 300), (-80, 80)]
+    multipliers = [0.25, 1, 0.05]
+    components = ["X", "Y", "Z"]
+    for i, v in enumerate([vxf, vyf, vzf]):
+        ax = rti._add_axis()
+        ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+        hours = mdates.HourLocator(byhour=range(0, 24, 1))
+        ax.xaxis.set_major_locator(hours)
+        ax.set_ylabel(r"$\mathcal{V}^{jb}_{%s}$, $m/s$"%components[i], fontdict={"size":15, "color":"b"})
+        ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+        ax.errorbar(v[0], v[1], yerr=v[2]*multipliers[i], color="b", fmt="o", ms=1, elinewidth=0.5)
+        ax.tick_params(axis="y", colors="b",)
+        ax.spines["left"].set_color("b")
+        ax.errorbar(v[0], v[3], yerr=v[4]*multipliers[i], color="k", fmt="^", ms=1, elinewidth=0.5)
+        tax = ax.twinx()
+        tax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
+        tax.xaxis.set_major_locator(hours)
+        tax.set_ylabel(r"EOF / $\mathcal{O}$", fontdict={"size":15, "color":"r"})
+        tax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+        tax.plot(v[-2], v[-1], "r-", lw=0.8)
+        tax.tick_params(axis="y", colors="r",)
+        tax.spines["right"].set_color("r")
+        tax.set_ylim(0, 1.05)
+        ax.text(0.05, 0.95, f"({chr(i+97)})", ha="left", va="center", transform=ax.transAxes)
+        ax.set_ylim(ranges[i])
+        if i==0:
+            ax.text(0.05, 1.05, r"Jang Bogo Dynasonde / $(\theta,\phi)= (74.6^{\circ} S, 164.2^{\circ} E)$", ha="left", va="center", transform=ax.transAxes, fontdict={"size":15})
+
+    ax.set_xlabel("Time, UT", fontdict={"size":15})
+    rti.save("figures_2021_Special/digisonde_summary.png")
+    rti.close()
     return

@@ -10,6 +10,7 @@ def read_digisonde(file_path=None):
         # Default file path for Digisonde data
         # Adjust this path as necessary for your environment
         file_path = DataBase_Path + "result_2021_12_04.nc"
+    print("Reading Digisonde data from:", file_path)
     ds = open_dataset(file_path)
     return ds
 
@@ -78,6 +79,23 @@ def consolidate_data(component="VXF"):
         velocity_err, 
         Component_Vel, 
         Component_Vel_Err,
+        lat, lon, time, eof
+    )
+
+def consolidate_horizontal_data():
+    dates, vxf, vxf_err, vxf_base, vxf_base_err, lat, lon, time, eof = consolidate_data(component="VXF")
+    _, vyf, vyf_err, vyf_base, vyf_base_err, _, _, _, _ = consolidate_data(component="VYF")
+    vhf = np.sqrt(vxf**2 + vyf**2)
+    vhf_base = np.sqrt(vxf_base**2 + vyf_base**2)
+    vhf_err = np.sqrt(
+        (vxf * vxf_err)**2 + (vyf * vyf_err)**2
+    ) / vhf
+    vhf_base_err = np.sqrt(
+        (vxf_base * vxf_base_err)**2 + (vyf_base * vyf_base_err)**2
+    ) / vhf_base
+    return (
+        dates, 
+        vhf, vhf_err, vhf_base, vhf_base_err,
         lat, lon, time, eof
     )
 
