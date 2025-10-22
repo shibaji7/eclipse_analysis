@@ -681,6 +681,7 @@ def create_map_plots(
 def plot_hall_conductivity(extent=[-180, 180, -90, -50], 
     plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
     central_longitude=80, central_latitude=-70.0,
+    cond="Pedersen",
 ):
     # Ream MCM and DMSP
     from readdmsp import read_1D_dmsp_datasets
@@ -748,7 +749,7 @@ def plot_hall_conductivity(extent=[-180, 180, -90, -50],
                 ha="right", va="bottom",
                 transform=ax.transAxes, fontsize="xx-small",
             )
-        data, lats, lons = get_2D_data(date, var="Hall")
+        data, lats, lons = get_2D_data(date, var=cond)
         XYZ = fan.proj.transform_points(
             fan.geo, 
             lons, 
@@ -767,7 +768,7 @@ def plot_hall_conductivity(extent=[-180, 180, -90, -50],
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
-            cb.set_label(r"$\Sigma_H [ASHLEY]$, $kV$")
+            cb.set_label(r"$\Sigma_%s [ASHLEY]$, $kV$"%("H" if cond=="Hall" else "P"))
         imfs = get_imfs(date)
 
         XYZ = fan.proj.transform_points(
@@ -850,6 +851,6 @@ def plot_hall_conductivity(extent=[-180, 180, -90, -50],
 
 
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
-    fan.save(f"figures_2021_Special/Cond_Maps.png")
+    fan.save(f"figures_2021_Special/Cond_{cond}_Maps.png")
     fan.close()
     return

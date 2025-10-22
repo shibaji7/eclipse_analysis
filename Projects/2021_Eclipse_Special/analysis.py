@@ -104,6 +104,7 @@ if "plot_maps" in methods:
     create_map_plots()
 
 if "plot_hall_conductivity" in methods:
+    plot_hall_conductivity(cond="Hall")
     plot_hall_conductivity()
 
 # if "plot_rti_analysis" in methods:
