@@ -931,3 +931,81 @@ def create_Digisonde_plots():
     rti.save("figures_2021_Special/digisonde_summary.png")
     rti.close()
     return
+
+def create_MCM_plots():
+    from plot import RangeTimePlot
+    import matplotlib.dates as mdates
+    from matplotlib.dates import DateFormatter
+    
+    ddates = [
+        [dt.datetime(2021,12,3), dt.datetime(2021,12,4)],
+        [dt.datetime(2021,12,4), dt.datetime(2021,12,5)],
+        [dt.datetime(2021,12,5), dt.datetime(2021,12,6)],
+    ]
+    drads = []
+    for rad, tf0, ch, dates in zip(["mcm", "mcm", "mcm"], [None, None, None], [None, None, None], ddates):
+        radar = Radar(rad, dates, type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        if ch:
+            df = df[df.channel==ch]
+        df["unique_tfreq"] = df.tfreq#.apply(lambda x: int(x/0.5)*0.5)
+        if tf0: 
+            df = df[df.tfreq.isin(tf0)]
+        v, tf = np.array(df.v), np.array(df.unique_tfreq)
+        v[tf==10.5] *= -1
+        df.v = v
+        radar.df = df
+        drads.append(radar)
+
+    rti = RangeTimePlot(
+        100, [dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)], 
+        # r"MIX $\phi$, in kV during Dec 4, 2021 Eclipse", 
+        "",
+        num_subplots=3
+    )
+    rti.unique_times = ddates[0]
+    ax = rti.addParamPlot(
+        "mcm", drads[0].df, 7, "(a) 03 December, 2021", 
+        p_max=500, p_min=100,
+        cmap="GnBu", cbar=True,
+        xlabel="",
+    )
+    ax.set_xlim([dt.datetime(2021,12,3,5), dt.datetime(2021,12,3,10)])
+    ax.text(0.05, 1.05, "mcm/7", ha="left", va="center", transform=ax.transAxes)
+    rti.unique_times = ddates[1]
+    ax = rti.addParamPlot(
+        "mcm", drads[1].df, 7, "(b) 04 December, 2021", 
+        p_max=500, p_min=100,
+        cmap="GnBu", cbar=False,
+        xlabel="",
+    )
+
+    import eutils
+    p = eutils.get_rti_eclipse(
+        [dt.datetime(2021,12,4,5)+dt.timedelta(seconds=30*i) for i in range(5*60*2)],
+        radar.get_lat_lon_along_beam(7)[0], radar.get_lat_lon_along_beam(7)[1]
+    )
+    cs = ax.contour(
+        [dt.datetime(2021,12,4,5)+dt.timedelta(seconds=30*i) for i in range(5*60*2)],
+        np.arange(76),
+        p.T,
+        colors="k", 
+        linewidths=0.8,
+        levels=[0.2, 0.4, 0.6, 0.75, 1.0],
+        zorder=1, alpha=0.6,
+    )
+    ax.clabel(cs, inline=True, fontsize=8, fmt='%.2f')
+    ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
+    rti.unique_times = ddates[2]
+    ax = rti.addParamPlot(
+        "mcm", drads[2].df, 7, "(c) 05 December, 2021", 
+        p_max=500, p_min=100,
+        cmap="GnBu", cbar=False,
+        xlabel="Time, UT",
+    )
+    ax.set_xlim([dt.datetime(2021,12,5,5), dt.datetime(2021,12,5,10)])
+    
+    rti.save("figures_2021_Special/rti_mcm_bgc.png")
+    rti.close()
+    return

@@ -25,6 +25,7 @@ from plotutils import (
     create_map_plots,
     plot_hall_conductivity,
     create_Digisonde_plots,
+    create_MCM_plots,
 )
 
 
@@ -38,6 +39,7 @@ methods = [
 setup()
 
 if "others" in methods:
+    create_MCM_plots()
     create_mix_ts()
     create_Digisonde_plots()
     # create_rays()
