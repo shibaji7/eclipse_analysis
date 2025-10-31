@@ -388,20 +388,20 @@ def create_mix_ts():
     rti.close()
     return
 
-def create_rays():
+def create_rays(run_name="Dec2021_gitm_eclipse_Modeled"):
     import rays
     rtos = [
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 6), "fir", 0, limit_elvs=[20, 40]),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 30), "fir", 0, limit_elvs=[20, 40]),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 45), "fir", 0, limit_elvs=[20, 40]),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 0, limit_elvs=[20, 40]),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 0, limit_elvs=[20, 40]),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 0, limit_elvs=[20, 40]),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 0, limit_elvs=[20, 40]),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 30), "fir", 0, limit_elvs=[20, 40]),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9), "fir", 0, limit_elvs=[20, 40]),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 30), "fir", 0, limit_elvs=[20, 40]),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 45), "fir", 0, limit_elvs=[20, 40]),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 6), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 45), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 45), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
     ]
     rp = rays.PlotRays(rtos[0], nrows=len(rtos), ncols=1, arc=True)
     rp.lay_rays(
@@ -415,7 +415,7 @@ def create_rays():
             add_tag=False,
             lay_eclipse=i in [2, 3, 4, 5, 6, 7, 8]
         )
-    rp.save(f"figures_2021_Special/Rays.png")
+    rp.save(f"figures_2021_Special/Rays_{run_name}.png")
     rp.close()
     return
 

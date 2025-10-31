@@ -42,7 +42,8 @@ if "others" in methods:
     create_MCM_plots()
     create_mix_ts()
     create_Digisonde_plots()
-    # create_rays()
+    create_rays()
+    create_rays(run_name="Dec2021_gitm_base_Modeled")
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
