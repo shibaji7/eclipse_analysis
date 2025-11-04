@@ -125,6 +125,7 @@ def create_simultaneous_plots(
             utils.setsize(10)
             cb.set_label(r"$N_e$, $/cm$")
     fan.save(f"figures_2021_Special/overlay_ne_{kind}.png")
+    fan.fig.savefig(f"figures_2021_Special/overlay_ne_{kind}.png", dpi=100, bbox_inches="tight")
     fan.close()
     return
 
