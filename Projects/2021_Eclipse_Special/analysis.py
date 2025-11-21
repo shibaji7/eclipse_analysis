@@ -25,6 +25,7 @@ from plotutils import (
     create_map_plots,
     plot_hall_conductivity,
     create_Digisonde_plots,
+    create_map_plot_cpcp_sd,
     create_MCM_plots,
 )
 
@@ -32,9 +33,9 @@ from plotutils import (
 methods = [
     # "plot_fov",
     # "plot_maps", 
-    # "plot_hall_conductivity",
+    "plot_hall_conductivity",
     # "fan_plot_fir", 
-    "others"
+    # "others"
 ]
 setup()
 
@@ -111,6 +112,7 @@ if "plot_maps" in methods:
 if "plot_hall_conductivity" in methods:
     plot_hall_conductivity(cond="Hall")
     plot_hall_conductivity()
+    create_map_plot_cpcp_sd()
 
 # if "plot_rti_analysis" in methods:
 #     calculate_decay_rate

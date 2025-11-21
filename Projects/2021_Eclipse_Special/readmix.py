@@ -55,11 +55,12 @@ def get_map_level_datasets():
     import bz2
     ds = read_sd()
     times = get_sd_time(ds["map.stime"].values)
-    pot_drop = ds["map.pot.drop"]
+    pot_drop, = ds["map.pot.drop"]
     f = "/home/chakras4/OneDrive/Chakras4/Projects/Chakraborty.Projects/byProjects/2024 Eclipse Project/2021 Special Eclipse/sd_map2/20211204.south.map2.bz2"
     with bz2.open(f) as fp: d = fp.read()
     reader = pydarn.SuperDARNRead(d, True)
     recs = reader.read_map()
+    print(recs[0].keys())
     import pandas as pd
     o = pd.DataFrame()
     o["time, UT"], o["pot.drop, kV"] = times, pot_drop/1e3
@@ -92,6 +93,24 @@ def parse_pot_data():
     ds.close()
     return o
 
+def get_sd_dot_loc(date, file=None):
+    ds = read_sd(file)
+    times = get_sd_time(ds["map.stime"].values)
+    i = times.index(date)
+    mlats = ds["fparam.mlats"].values[i, :]
+    mlons = ds["fparam.mlons"].values[i, :]
+    ds.close()
+    import aacgmv2
+    glats, glons = np.zeros_like(mlats), np.zeros_like(mlons)
+    i = 0
+    for xlat, xlon in zip(mlats, mlons):
+        glats[i], glons[i], _ = aacgmv2.convert_latlon_arr(
+            [xlat], [xlon], 300, date, 
+            method_code="A2G"
+        )
+        i+=1
+    return (glats, glons)
+
 def get_sd_data(date, file=None, var="fparam.pot_arr"):
     ds = read_sd(file)
     times = get_sd_time(ds["map.stime"].values)
@@ -115,3 +134,4 @@ def get_sd_data(date, file=None, var="fparam.pot_arr"):
 if __name__ == "__main__":
     # get_sd_data(dt.datetime(2021,12,4,7,40))
     get_map_level_datasets()
+    # parse_pot_data()

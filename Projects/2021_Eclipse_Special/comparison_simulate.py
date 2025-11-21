@@ -99,35 +99,40 @@ def create_simultaneous_plots(
     for j, d in enumerate(dates):
         fan.date = d
         ax = fan.add_axes(add_coords=j==0, add_time=True)
-        data = get_2D_density_data(d, ext=kind)
+        data_b = get_2D_density_data(d, ext="base")
+        data = get_2D_density_data(d, ext="euv")
         glat, glon = data["glat"], data["glon"]
         glat, glon = np.meshgrid(glat, glon)
         XYZ = fan.proj.transform_points(
             fan.geo, 
             glon, glat
-            
         )
-        data["ne"] = np.ma.masked_where(data["ne"]==0, data["ne"])
+        data["ne"] = (data["ne"] - data_b["ne"])/1e10
+        # data["ne"] = np.ma.masked_where(data["ne"]==0, data["ne"])
         im = ax.pcolor(
             XYZ[:, :, 0], XYZ[:, :, 1], data["ne"].T,
-            alpha=0.5, zorder=2, cmap="Spectral_r",
-            norm=LogNorm(vmin=1e10, vmax=5e11)
+            alpha=0.8, zorder=2, cmap="Spectral_r",
+            vmax=5, vmin=-5,
+            # norm=LogNorm(vmin=1e10, vmax=5e11)
         )
-        ax.overlay_fov("fir", lineColor="m", maxGate=110,)
-        ax.overlay_radar("fir", font_color="m", yOffset=1, xOffset=3, markerColor="m", fontSize=8)
+        ax.overlay_fov("fir", lineColor="r", maxGate=110,)
+        ax.overlay_radar("fir", font_color="r", yOffset=1, xOffset=3, markerColor="r", fontSize=8)
+        ax.overlay_fov("mcm", lineColor="b", maxGate=75)
+        ax.overlay_radar("mcm", font_color="b", yOffset=1, xOffset=3, markerColor="r", fontSize=8)
         if kind=="euv":
             ax.overlay_eclipse(j==len(dates)-1)
+        ax.text(0.01, 1.05, f"({chr(97+j)})", transform=ax.transAxes, ha="left", va="center", fontsize=10)
         if j==2:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
-            cb.set_label(r"$N_e$, $/cm$")
+            cb.set_label(r"$N_e$ [$\times 10^{10}$], $/m^{3}$")
     fan.save(f"figures_2021_Special/overlay_ne_{kind}.png")
-    fan.fig.savefig(f"figures_2021_Special/overlay_ne_{kind}.png", dpi=100, bbox_inches="tight")
+    fan.fig.savefig(f"figures_2021_Special/overlay_ne_{kind}.png", dpi=300, bbox_inches="tight")
     fan.close()
     return
 
 create_simultaneous_plots()
-create_simultaneous_plots(kind="base")
+# create_simultaneous_plots(kind="base")
