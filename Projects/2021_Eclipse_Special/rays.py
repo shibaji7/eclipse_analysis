@@ -305,7 +305,7 @@ class PlotRays(object):
         self.ylim = ylim
         self.axnum = 0
         self.fig = plt.figure(
-            figsize=(figsize[0] * ncols, figsize[1] * nrows), dpi=1000
+            figsize=(figsize[0] * ncols, figsize[1] * nrows), dpi=200
         )
         self.xtolim = xtolim
         self.lw = lw
@@ -336,10 +336,10 @@ class PlotRays(object):
         if kind == "pf":
             o, cmap, label, norm = (
                 getattr(self, kind),
-                # "PuOr",
-                "YlGnBu",
+                "PuOr",
+                # "YlGnBu",
                 r"$f_0$ [MHz]",
-                colors.Normalize(4, 7),
+                colors.Normalize(4, 6),
             )
         if kind == "edens":
             o, cmap, label, norm = (
@@ -357,15 +357,9 @@ class PlotRays(object):
             )
         return o, cmap, label, norm
 
-    def get_arc_heights(self, height, dist):
-        darc = dist / 6371.0
-        true_height = 6371.0 + height
-        height = true_height * np.cos(darc) - 6371.0
-        return height
-
     def lay_rays(
         self,
-        xlim_max=3000,
+        xlim_max=3500,
         kind="pf",
         zoomed_in=[],
         lcolor="k",
@@ -380,27 +374,13 @@ class PlotRays(object):
         rto=None,
         ped_angles=[],
         lay_eclipse=False,
+        dtype="Base",
     ):
         self.rto = rto if rto else self.rto
         self.set_rto()
         ax = ax if ax else self.create_figure_pane(xlabel, ylabel)
 
         o, cmap, label, norm = self.get_parameter(kind)
-        ## Check needs interpolation
-        # if self.xtolim <= xlim_max:
-        #     index_xlim = np.abs(self.xtolim - self.rto.bearing.dist.ravel()).argmin()
-        #     dist, height = (
-        #         self.rto.bearing.dist.ravel(),
-        #         self.rto.bearing.heights.ravel(),
-        #     )
-        #     d = self.rto.bearing.dist.ravel()[1] - self.rto.bearing.dist.ravel()[0]
-        #     dist_ext = np.arange(self.xtolim, xlim_max, d)
-        #     o_ext = np.array(
-        #         [o[:, index_xlim].tolist() for i in range(len(dist_ext))]
-        #     ).T
-        #     dist = np.concatenate((dist[:index_xlim], dist_ext))
-        #     o = np.concatenate((o[:, :index_xlim], o_ext), axis=1)
-        # else:
         dist, height = (
             self.rto.bearing.dist.ravel(),
             self.rto.bearing.heights.ravel(),
@@ -410,14 +390,15 @@ class PlotRays(object):
         if self.arc:
             height = self.get_arc_heights(height, dist)
         
-        from eutils import get_fov_eclipse_contours
-        p = get_fov_eclipse_contours(
-            self.rto.event, 
-            self.rto.bearing.lat.ravel(), 
-            self.rto.bearing.lon.ravel()
-        )
-        p[p>1] = 0
         if lay_eclipse:
+            from eutils import get_fov_eclipse_contours
+            p = get_fov_eclipse_contours(
+                self.rto.event, 
+                self.rto.bearing.lat.ravel(), 
+                self.rto.bearing.lon.ravel()
+            )
+            p[p>1] = 0
+
             CS = ax.contour(
                 dist, 
                 height,
@@ -435,11 +416,7 @@ class PlotRays(object):
             alpha=1.,
             zorder=3,
         )
-        ds = dist[0, :]
-        hs = []
-        for i in range(o.shape[1]):
-            hs.append(height[:, i][np.argmax(o[:, i])])
-        ax.plot(ds, hs, ls="--", lw=0.3, color="k", zorder=3)
+        ax.plot(dist[0, :], height[200, :], ls="--", lw=0.3, color="k", zorder=3)
         ax.set_xlim(right=xlim_max)
         if add_cbar:
             pos = ax.get_position()
@@ -486,16 +463,23 @@ class PlotRays(object):
             ray_label = ray_data["ray_label"].iloc[0]
             lw = self.lw
             alpha = 0.3
-            if ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]<1000:
+            if ray_path_data.ray_label.iloc[0] == -1:# and ray_path_data.ground_range.iloc[-1]<1000:
                 lcolor = "m"
-            elif ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]>1000:
-                lcolor, alpha, lw = "darkgreen", 1, 1
+            # elif ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]>1000:
+            #     lcolor, alpha, lw = "darkgreen", 1, 1
             elif ray_path_data.ray_label.iloc[0] == -2:
                 lcolor = "r"
-            elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]==0:
-                lcolor = "k"
-            elif ray_label == 1 and ray_path_data.height.iloc[-1]>100:
+            elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]>100:
                 lcolor, alpha, lw = "darkgreen", 1, 1
+                print(
+                    ray_path_data.ground_range.tolist(), ray_path_data.height.tolist()
+                )
+                print(r.tolist())
+                print("____________________________________________________________________")
+            elif ray_path_data.ray_label.iloc[0] == 1: #and ray_path_data.height.iloc[-1]==0:
+                lcolor = "k"
+            # elif ray_label == 1 and ray_path_data.height.iloc[-1]>100:
+            #     lcolor, alpha, lw = "darkgreen", 1, 1
             if len(ped_angles) > 0:
                 if np.round(ray_path_data.elv.iloc[0], 1) in ped_angles:
                     lcolor, alpha, lw = "darkgreen", 1, 1
@@ -503,10 +487,12 @@ class PlotRays(object):
             col = "k" if ray_label == 1 else "r"
             if ray_label == 1 and ray_path_data.height.iloc[-1]==0:
                 ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="k", zorder=4)
-            elif ray_label == -1 and ray_path_data.ground_range.iloc[-1]<1000:
+            elif ray_label == -1: # and ray_path_data.ground_range.iloc[-1]<1000:
                 ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=0.2, color="m", zorder=4)
-            elif (ray_label == 1 and ray_path_data.height.iloc[-1]>100) or (ray_label == -1 and ray_path_data.ground_range.iloc[-1]>1000):
-                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=1, color="darkgreen", zorder=4)
+            elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]>100:
+                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="darkgreen", zorder=4)
+            # elif (ray_label == 1 and ray_path_data.height.iloc[-1]>100) or (ray_label == -1 and ray_path_data.ground_range.iloc[-1]>1000):
+            #     ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=1, color="darkgreen", zorder=4)
         if add_time:
             stitle = "%s UT" % self.event.strftime("%Y-%m-%d %H:%M")
             ax.text(
@@ -519,7 +505,7 @@ class PlotRays(object):
                 fontdict={"size": 8, "fontweight": "bold"},
             )
         if add_tag:
-            stitle = f"Model: GITM / {self.rad}-{'%02d'%(self.beam+7)}, $f_0$={self.rto.frequency/1e6} MHz"
+            stitle = f"Model: GITM [{dtype}] / {self.rad}-{'%02d'%(self.beam)}, $f_0$={self.rto.frequency/1e6} MHz"
             ax.text(
                 0.05,
                 1.05,
@@ -531,10 +517,10 @@ class PlotRays(object):
             )
 
         ax.text(
-            0.05,
             0.95,
-            text + r" $\mathcal{O}=%0.2f$"%np.max(p),
-            ha="left",
+            0.95,
+            text,# + r" $\mathcal{O}=%0.2f$"%np.max(p),
+            ha="right",
             va="center",
             transform=ax.transAxes,
             fontdict={"size": 12},
@@ -562,6 +548,12 @@ class PlotRays(object):
         h = self.get_arc_heights(h, gr)
         return gr, h
 
+    def get_arc_heights(self, height, dist):
+        darc = dist / 6371.0
+        true_height = 6371.0 + height
+        height = true_height * np.cos(darc) - 6371.0
+        return height
+
     def create_figure_pane(self, xlabel=r"Ground range, km", ylabel=r"Height, km"):
         self.axnum += 1
         fignum = 100 * self.nrows + 10 * self.ncols + self.axnum
@@ -569,7 +561,7 @@ class PlotRays(object):
         # Create Arc
         if self.arc:
             R = 6371.0
-            theta = np.deg2rad(np.linspace(0, 90, 91))
+            theta = np.deg2rad(np.linspace(-180, 180, 91))
             x, y = R * np.cos(theta), R * np.sin(theta) - R
             ax.plot(x, y, ls="-", color="k", lw=1)
             ax.text(
@@ -591,410 +583,19 @@ class PlotRays(object):
             )
             ax.set_facecolor("0.98")
             ax.fill_between(x, -800 * np.ones_like(y), y, color="gray", alpha=0.5)
+            ax.set_xlim(self.xlim if len(self.xlim) == 2 else [0, 3500])
+            ax.set_ylim(self.ylim if len(self.ylim) == 2 else [-1000, 600])
         else:
             ax.set_ylabel(ylabel, fontdict={"size": 12, "fontweight": "bold"})
             ax.set_xlabel(xlabel, fontdict={"size": 12, "fontweight": "bold"})
-        ax.set_xlim(self.xlim if len(self.xlim) == 2 else [0, 2000])
-        ax.set_ylim(self.ylim if len(self.ylim) == 2 else [-800, 600])
+            ax.set_xlim(self.xlim if len(self.xlim) == 2 else [0, 3500])
+            ax.set_ylim(self.ylim if len(self.ylim) == 2 else [-100, 600])
+            ax.set_facecolor("0.98")
+            ax.axhline(0, ls="-", color="k", lw=1, alpha=0.4)
+            ax.fill_between([0, 3500], [-100, -100], [0, 0], color="gray", alpha=0.5)
+        
         ax.tick_params(axis="both", labelsize=11)
         ax.set_yticks([0, 200, 400, 600])
         return ax
 
-    def __zoomed_in_panel__(self, ax, kind, zoomed_in, lcolor="k", ped_angles=[]):
-        self.zoom_ax = ax.inset_axes([0.5, 0.7, 0.5, 0.3])
-        o, cmap, _, norm = self.get_parameter(kind)
-        self.zoom_ax.pcolormesh(
-            self.rto.bearing.dist.ravel(),
-            self.rto.bearing.heights.ravel(),
-            o,
-            norm=norm,
-            cmap=cmap,
-            alpha=0.8,
-        )
-        # self.zoom_ax.contour(
-        #     self.rto.bearing.dist.ravel(),
-        #     self.rto.bearing.heights.ravel(),
-        #     o, 
-        #     linewidths=0.2, zorder=3, colors="k", 
-        #     levels=[4, 4.5, 5, 5.5, 6.0]
-        # )
-        
-        rays = self.rto.rays
-        self.elvs = rays.initial_elev
-        for i, elv in enumerate(self.elvs):
-            ray_path_data, ray_data = (
-                self.rto.ray_path[elv],
-                rays[rays.initial_elev == elv],
-            )
-            th, r = (ray_path_data.ground_range.copy(), ray_path_data.height.copy())
-            lw = self.lw
-            alpha = 0.3
-            lcolor = "k"
-            if len(ped_angles) > 0:
-                if np.round(ray_path_data.elv.iloc[0], 1) in ped_angles:
-                    lcolor, alpha, lw = "darkgreen", 1, 1
-            self.zoom_ax.plot(th, r, c=lcolor, zorder=3, alpha=alpha, ls="-", lw=lw)
 
-        self.zoom_ax.set_xlim(zoomed_in[0])
-        self.zoom_ax.set_ylim(zoomed_in[1])
-        th_ticklabels, r_ticklabels = (
-            self.zoom_ax.get_xticklabels(),
-            self.zoom_ax.get_yticklabels(),
-        )
-        # self.zoom_ax.set_xlabel("Ground Range, km", fontdict={"size": 8})
-        # self.zoom_ax.set_ylabel("Height, km", fontdict={"size": 8})
-        ax.indicate_inset_zoom(self.zoom_ax)
-        return
-
-
-class PlotChannels(object):
-    def __init__(self, rto, nrows=2, ncols=2, ylim=[], xlim=[], xtolim=1700):
-        self.nrows = nrows
-        self.ncols = ncols
-        self.rto = rto
-        self.set_rto()
-        self.xlim = xlim
-        self.ylim = ylim
-        self.axnum = 0
-        self.fig = plt.figure(figsize=(8 * ncols, 3 * nrows), dpi=1000)
-        self.xtolim = xtolim
-        return
-
-    def set_rto(self):
-        self.event = self.rto.event
-        self.edens = self.rto.edens
-        self.pf = self.rto.pf
-        self.ref_indx = self.rto.ref_indx
-        self.rad = self.rto.rad
-        self.beam = self.rto.beam
-        return
-
-    def save(self, filepath):
-        self.fig.savefig(filepath, bbox_inches="tight", facecolor=(1, 1, 1, 1))
-        return
-
-    def close(self):
-        self.fig.clf()
-        plt.close()
-        return
-
-    def get_parameter(self, kind):
-
-        if kind == "pf":
-            o, cmap, label, norm = (
-                getattr(self, kind),
-                "Blues",
-                r"$f_0$ [MHz]",
-                colors.Normalize(4, 6),
-            )
-        if kind == "edens":
-            o, cmap, label, norm = (
-                getattr(self, kind),
-                "Blues",
-                r"$N_e$ [$/cm^{-3}$]",
-                colors.LogNorm(1e5, 1e6),
-            )
-        if kind == "ref_indx":
-            o, cmap, label, norm = (
-                getattr(self, kind),
-                "Blues",
-                r"$\eta$",
-                colors.Normalize(0.8, 9),
-            )
-        return o, cmap, label, norm
-
-    def lay_rays(
-        self,
-        xlim_max=2000,
-        kind="pf",
-        zoomed_in=[],
-        lcolor="k",
-        tag_distance: float = -1,
-        ax=None,
-        xlabel=r"Ground range, km",
-        ylabel=r"Height, km",
-        add_time=True,
-        add_cbar=True,
-        add_tag=True,
-        text="(A)",
-        rto=None,
-    ):
-        self.rto = rto if rto else self.rto
-        self.set_rto()
-        df = self.rto.compile()
-        ax = ax if ax else self.create_figure_pane(xlabel, ylabel)
-
-        X, Y, Z = get_gridded_parameters(
-            df,
-            "elv",
-            "geometric_distance",
-            # "phase_path",
-            "refractive_index",
-            rounding=False,
-        )
-        im = ax.scatter(
-            X.ravel(),
-            Y.ravel(),
-            c=Z.T.ravel(),
-            s=50,
-            marker="s",
-            norm=colors.Normalize(0.82, 0.95),
-            cmap="YlGnBu",
-            alpha=0.7,
-        )
-        ax.set_xlim(right=xlim_max)
-        if add_cbar:
-            pos = ax.get_position()
-            cpos = [
-                pos.x1 + 0.025,
-                pos.y0 + 0.05,
-                0.015,
-                pos.height * 0.6,
-            ]
-            cax = self.fig.add_axes(cpos)
-            cbax = self.fig.colorbar(
-                im, cax, spacing="uniform", orientation="vertical", cmap="plasma"
-            )
-            _ = cbax.set_label(r"$\eta$", fontsize=11)
-            cbax.ax.tick_params(axis="both", labelsize=11)
-        if add_time:
-            stitle = "%s UT" % self.event.strftime("%Y-%m-%d %H:%M")
-            ax.text(
-                0.95,
-                1.05,
-                stitle,
-                ha="right",
-                va="center",
-                transform=ax.transAxes,
-                fontdict={"size": 8, "fontweight": "bold"},
-            )
-        if add_tag:
-            stitle = f"Model: GEMINI / {self.rad}-{'%02d'%self.beam}, $f_0$={self.rto.frequency/1e6} MHz"
-            ax.text(
-                0.05,
-                1.05,
-                stitle,
-                ha="left",
-                va="center",
-                transform=ax.transAxes,
-                fontdict={"size": 12, "fontweight": "bold"},
-            )
-
-        ax.text(
-            0.05,
-            0.95,
-            text,
-            ha="left",
-            va="center",
-            transform=ax.transAxes,
-            fontdict={"size": 12},
-        )
-        ax.set_xlim(self.xlim)
-        ax.set_ylim(self.ylim)
-        ax.set_xlabel(xlabel, fontdict={"size": 12, "fontweight": "bold"})
-        ax.set_ylabel(ylabel, fontdict={"size": 12, "fontweight": "bold"})
-        # Create Zoomed in panel
-        if len(zoomed_in):
-            self.__zoomed_in_panel__(ax, kind, zoomed_in, lcolor)
-        return ax
-
-    def create_figure_pane(self, xlabel=r"Ground range, km", ylabel=r"Height, km"):
-        self.axnum += 1
-        fignum = 100 * self.nrows + 10 * self.ncols + self.axnum
-        ax = self.fig.add_subplot(fignum)
-        ax.tick_params(axis="both", labelsize=11)
-        return ax
-
-    def __zoomed_in_panel__(self, ax, kind, zoomed_in, lcolor="k"):
-        self.zoom_ax = ax.inset_axes([0.4, 1.3, 0.3, 0.5])
-        o, cmap, _, norm = self.get_parameter(kind)
-        self.zoom_ax.pcolormesh(
-            self.rto.bearing.dist.ravel(),
-            self.rto.bearing.heights.ravel(),
-            o,
-            norm=norm,
-            cmap=cmap,
-            alpha=0.8,
-        )
-        rays = self.rto.rays
-        self.elvs = rays.initial_elev
-        for i, elv in enumerate(self.elvs):
-            ray_path_data, ray_data = (
-                self.rto.ray_path[elv],
-                rays[rays.initial_elev == elv],
-            )
-            th, r = (ray_path_data.ground_range.copy(), ray_path_data.height.copy())
-            self.zoom_ax.plot(th, r, c="k", zorder=3, alpha=0.7, ls="-", lw=0.5)
-
-        self.zoom_ax.set_xlim(zoomed_in[0])
-        self.zoom_ax.set_ylim(zoomed_in[1])
-        th_ticklabels, r_ticklabels = (
-            self.zoom_ax.get_xticklabels(),
-            self.zoom_ax.get_yticklabels(),
-        )
-        self.zoom_ax.set_xlabel("Ground Range, km", fontdict={"size": 8})
-        self.zoom_ax.set_ylabel("Height, km", fontdict={"size": 8})
-        ax.indicate_inset_zoom(self.zoom_ax)
-        return
-
-
-import matplotlib as mpl
-
-mpl.rc("font", size=15)
-from typing import Optional, Sequence
-
-import matplotlib.dates as mdates
-
-
-class StackPlots:
-
-    def __init__(
-        self,
-        nrows: int,
-        ncols: int,
-        dpi: int = 1000,
-        datetime: bool = False,
-        polar: bool = False,
-        figsize: tuple = (8, 3),
-    ):
-        self.nrows = nrows
-        self.ncols = ncols
-        self.fig, self.axes = plt.subplots(
-            self.nrows,
-            self.ncols,
-            figsize=(self.ncols * figsize[0], self.nrows * figsize[1]),
-            sharex=True,
-            dpi=dpi,
-            subplot_kw={"projection": "polar"} if polar else {},
-        )
-        self.axes = self.axes.flatten() if self.nrows > 1 else [self.axes]
-        self.fig.subplots_adjust(hspace=0.5, wspace=0.3)
-        self.plot_id = 0
-        self.datetime = datetime
-
-    def plot_stack_plots(
-        self,
-        time: Sequence,
-        value: Sequence,
-        title: Optional[str] = None,
-        xlabel: Optional[str] = None,
-        ylabel: Optional[str] = None,
-        label: Optional[str] = None,
-        text: Optional[str] = None,
-        ylim: Optional[Sequence] = None,
-        xlim: Optional[Sequence] = None,
-        color: str = "blue",
-        lw: float = 0.8,
-        ls: str = "-",
-        ax: Optional[plt.Axes] = None,
-        ylabel_color: Optional[str] = "k",
-    ) -> tuple:
-        """
-        Plot a stack of plots with the given time and value data.
-        :param time: Time data for the x-axis
-        :param value: Value data for the y-axis
-        :param title: Title for the plot
-        :param xlabel: Label for the x-axis
-        :param ylabel: Label for the y-axis
-        """
-        if self.plot_id > len(self.axes):
-            raise ValueError("No more axes available for plotting.")
-        if ax is None:
-            ax = self.axes[self.plot_id]
-            self.plot_id += 1
-        if title:
-            ax.set_title(title)
-        if xlabel:
-            ax.set_xlabel(xlabel)
-        if ylabel:
-            ax.set_ylabel(ylabel, color=ylabel_color)
-        if ylim:
-            ax.set_ylim(ylim)
-        else:
-            ax.set_ylim([min(value), max(value)])
-        if xlim:
-            ax.set_xlim(xlim)
-        else:
-            ax.set_xlim([time[0], time[-1]])
-        if self.datetime:
-            ax.xaxis.set_major_locator(mdates.HourLocator(interval=3))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%H"))
-        ax.plot(time, value, color=color, linewidth=lw, ls=ls, label=label)
-        if text:
-            ax.text(0.05, 1.05, text, ha="left", va="center", transform=ax.transAxes)
-
-        plt.tight_layout()
-        return self.fig, ax
-
-    def save_fig(self, filename: str):
-        """
-        Save the figure to a file.
-        :param filename: Filename to save the figure
-        """
-        self.fig.savefig(filename, bbox_inches="tight")
-        return
-
-    def close(self):
-        """
-        Close the figure.
-        """
-        plt.close(self.fig)
-        return
-
-    def plot_dirctional_plots(
-        self,
-        theta: Sequence,
-        r: Sequence,
-        title: Optional[str] = None,
-        text: Optional[str] = None,
-        color: str = "black",
-        ax: Optional[plt.Axes] = None,
-        rlims: Optional[Sequence] = [0, 1],
-        rticks: Optional[Sequence] = [0, 0.5, 1.0],
-        theta_ticks: Optional[Sequence] = [0, np.pi / 2, np.pi, 3 * np.pi / 2],
-        cable_angle: Optional[float] = None,
-    ):
-        """
-        Plot directional plots.
-        """
-        if self.plot_id > len(self.axes):
-            raise ValueError("No more axes available for plotting.")
-        if ax is None:
-            ax = self.axes[self.plot_id]
-            ax.set_theta_zero_location("N")
-            ax.set_theta_direction(-1)
-            self.plot_id += 1
-            if cable_angle is not None:
-                ax.plot(
-                    np.deg2rad([cable_angle, cable_angle]),
-                    [0, 1],
-                    lw=1.2,
-                    ls="-",
-                    color="m",
-                )
-        if title:
-            ax.set_title(title, fontdict=dict(size=12))
-
-        ax.bar(
-            np.deg2rad(theta),
-            r,
-            bottom=0.0,
-            color=color,
-            width=np.deg2rad(theta[1] - theta[0]),
-            alpha=0.5,
-        )
-        ax.set_rticks(rticks)
-        ax.set_xticks(theta_ticks)
-        ax.set_rmax(rlims[1])
-        ax.set_rmin(rlims[0])
-        if text:
-            ax.text(
-                -0.1,
-                1.05,
-                text,
-                ha="left",
-                va="center",
-                transform=ax.transAxes,
-                color=color,
-            )
-        return self.fig, ax

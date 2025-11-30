@@ -1,4 +1,5 @@
 from xarray import open_dataset
+import datetime as dt
 
 def read_dmsp(file_path=None):
     if file_path is None:
@@ -33,5 +34,22 @@ def read_2D_dmsp_datasets(
     ds.close()
     return data
 
+def get_energy_bins(file_path=None):
+    import aacgmv2
+    ds = read_dmsp(file_path)
+    energy_bins = ds["ENERGY_FLUX_SOUTH_MAP"]
+    mlat, mlon = (
+        ds["LATITUDE_GEOMAGNETIC_GRID_MAP"].values,
+        ds["LONGITUDE_GEOMAGNETIC_SOUTH_GRID_MAP"].values
+    )
+    ds.close()
+    print(ds["LATITUDE_GEOMAGNETIC_GRID_MAP"].values)
+    # glat, glon = aacgmv2.convert_latlon(
+    #     mlat, mlon, 300, dt.datetime(2021, 12, 4, 7),
+    #     method_code="A2G"
+    # )
+    # return energy_bins, glat, glon
+
 if __name__ == "__main__":
-    read_dmsp()
+    # read_dmsp()
+    get_energy_bins()

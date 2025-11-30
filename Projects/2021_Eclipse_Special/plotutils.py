@@ -347,7 +347,7 @@ def create_mix_ts():
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
     ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
-    ax.text(0.05, 0.95, r"Jang Bogo/$(\theta,\phi)=(74.6^{\circ}S, 164.2^{\circ}E)$", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, r"(b) Jang Bogo/$(\theta,\phi)=(74.6^{\circ}S, 164.2^{\circ}E)$", ha="left", va="center", transform=ax.transAxes)
     tax = ax.twinx()
     tax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
     tax.xaxis.set_major_locator(hours)
@@ -388,34 +388,52 @@ def create_mix_ts():
     rti.close()
     return
 
-def create_rays(run_name="Dec2021_gitm_eclipse_Modeled"):
+def create_rays(run_name="Dec2021_gitm_base_Modeled"):
     import rays
-    rtos = [
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 6), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 6, 45), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        # rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 30), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
-        rays.RayTraceObject(dt.datetime(2021, 12, 4, 9, 45), "fir", 0, limit_elvs=[20, 40], run_name=run_name),
+    rtos_base = [
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        
     ]
-    rp = rays.PlotRays(rtos[0], nrows=len(rtos), ncols=1, arc=True)
+
+    run_name = "Dec2021_gitm_eclipse_Modeled" 
+    rtos_ecl = [
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 7, 30), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+        rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
+    ]
+    rp = rays.PlotRays(rtos_base[0], nrows=len(rtos_ecl), ncols=2, arc=False)
     rp.lay_rays(
-        text="(A) 6:00 UT",
+        text="(A) 7:00 UT",
+        add_cbar=False,
+        add_time=False,
     )
-    for i, ray in enumerate(rtos[1:]):
+    ax_num = [2, 4, 6]
+    for i, ray in enumerate(rtos_base[1:]):
+        rp.axnum = ax_num[i]
         rp.lay_rays(
             rto=ray,
             text=f"({chr(ord('B')+i)}) {ray.event.strftime('%H:%M UT')}",
             add_cbar=False,
             add_tag=False,
-            lay_eclipse=i in [2, 3, 4, 5, 6, 7, 8]
+            dtype="Base",
+            add_time=False,
         )
-    rp.save(f"figures_2021_Special/Rays_{run_name}.png")
+    ax_num = [1, 3, 5, 7]
+    for i, ray in enumerate(rtos_ecl):
+        rp.axnum = ax_num[i]
+        rp.lay_rays(
+            rto=ray,
+            text=f"({chr(ord('E')+i)}) {ray.event.strftime('%H:%M UT')}",
+            add_cbar=i==0,
+            add_tag=i==0,
+            dtype="Eclipse",
+            add_time=False,
+        )
+    rp.save(f"figures_2021_Special/Rays.png")
     rp.close()
     return
 
@@ -518,6 +536,147 @@ def create_fan_plots_stack(
         
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.1)
     fan.save(f"figures_2021_Special/{date.strftime('%Y%m%d%H%M')}.png")
+    fan.close()
+    return
+
+def create_overlay_amp_plots(
+    extent=[-180, 180, -90, -50], 
+    plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
+    central_longitude=80, central_latitude=-70.0,
+):
+    from readdmsp import read_1D_dmsp_datasets
+    dmspdata_south_boundary = read_1D_dmsp_datasets()
+    dates = [dt.datetime(2021,12,4,6),dt.datetime(2021,12,4,10)]
+
+    from readmix import get_2D_data, get_sd_data, get_imfs
+    from matplotlib.colors import TwoSlopeNorm
+    fan = Fan(
+        [], dt.datetime(2021,12,4), f"", cb=cb,
+        central_longitude=central_longitude, 
+        central_latitude=central_latitude, extent=extent,
+        plt_lats=plt_lats, nrows=3, ncols=4, sup_title=False,
+        mark_lon=mark_lon, coord="geo"
+    )
+    dates = [
+        dt.datetime(2021, 12, 4, 6),
+        dt.datetime(2021, 12, 4, 6, 30),
+        dt.datetime(2021, 12, 4, 7, 0),
+        dt.datetime(2021, 12, 4, 7, 30),
+        dt.datetime(2021, 12, 4, 7, 40),
+        dt.datetime(2021, 12, 4, 7, 50),
+        dt.datetime(2021, 12, 4, 8),
+        dt.datetime(2021, 12, 4, 8, 14),
+        dt.datetime(2021, 12, 4, 8, 30),
+        dt.datetime(2021, 12, 4, 8, 44),
+        dt.datetime(2021, 12, 4, 9),
+        dt.datetime(2021, 12, 4, 9, 30)
+    ]
+    for j, date in enumerate(dates):
+        utils.setsize(12)
+        fan.date = date
+        ax = fan.add_axes(add_coords=j==0, add_time=False)
+        
+
+        pot, plats, plons = get_2D_data(date, var="Pot")
+        Jpar, jlats, jlons = get_2D_data(date)
+
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            plons, 
+            plats
+        )
+        pot = np.ma.masked_where(np.abs(pot)==0., pot)
+        im = ax.pcolor(
+            XYZ[:, :, 0], XYZ[:, :, 1], pot,
+            alpha=0.8, norm=TwoSlopeNorm(vcenter=0, vmin=-20, vmax=20),
+             zorder=2, cmap="RdBu"
+        )
+        if j==3:
+            utils.setsize(10)
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = ax.inset_axes(cpos, transform=ax.transAxes)
+            cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            utils.setsize(10)
+            cb.set_label(r"$\Phi [GITM + AMPERE]$, $kV$")
+
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            jlons, 
+            jlats
+        )
+        Jpar = np.ma.masked_where(np.abs(Jpar)==0., Jpar)
+        im = ax.pcolor(
+            XYZ[:, :, 0], XYZ[:, :, 1], Jpar,
+            alpha=0.5, norm=TwoSlopeNorm(vcenter=0, vmin=-1.5, vmax=1.5),
+            zorder=3, cmap="PiYG"
+        )
+        if j==7:
+            utils.setsize(10)
+            cpos = [1.05, 0.1, 0.025, 0.6]
+            cax = ax.inset_axes(cpos, transform=ax.transAxes)
+            cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            utils.setsize(10)
+            cb.set_label(r"$AMPERE$, $\mu A$")
+
+        imfs = get_imfs(date)
+
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="darkgreen", lw=0.5,)
+        XYZ = fan.proj.transform_points(
+            fan.geo, 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LONGITUDE"], 
+            dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
+        )
+        ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5)
+        ax.scatter(
+            164.24,-74.62, 
+            s=20,
+            marker="^",
+            color="k",
+            zorder=3,
+            transform=cartopy.crs.PlateCarree(),
+            lw=0.8,
+            alpha=0.8,
+        )
+        from read_digisonde import get_hv_by_date
+        hv = get_hv_by_date(date)
+        print("Digisonde HV:", hv)
+        q = ax.quiver(
+            np.array([[164.24]]), 
+            np.array([[-74.62]]),
+            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]), 
+            transform=cartopy.crs.PlateCarree(),
+            headwidth=2, headlength=2, scale=1500, color="m", 
+            zorder=3
+        )
+        if j==0:
+            qk = ax.quiverkey(
+                q,
+                X=1.05,
+                Y=0.8,
+                U=500,
+                angle=90,
+                label="500 m/s",
+                labelpos="E",
+                coordinates="axes",
+                labelsep=0.05
+            )
+            qk.text.set_fontsize("x-small")
+            qk.text.set_rotation(90)
+        txt = fr"$\phi_0$={np.round(np.max(pot)-np.min(pot),1)} kV" + "\n"
+        txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
+        txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
+        txt = txt + (r"$Vz_{jb}$=%.1f m/s"%(hv['VZF']))
+        ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        ax.text(0.05, 0.95, txt, ha="left", va="top", transform=ax.transAxes, fontdict={"size": 6, "color": "k"})
+        ax.overlay_eclipse(j==len(dates)-1)
+
+    fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
+    fan.save(f"figures_2021_Special/Maps.png")
     fan.close()
     return
 
@@ -1186,4 +1345,60 @@ def create_map_plot_cpcp_sd(
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
     fan.save(f"figures_2021_Special/Maps_cpcp.png")
     fan.close()
+    return
+
+
+def create_DMSP_fluxplots():
+    return
+
+def create_rti_plots(
+    rad_beams_ch_freq, dates, beam=15, yscale="srange", 
+    range=[0, 4500]
+):
+    date = dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
+    rti = RangeTimePlot(
+        range, 
+        dates, 
+        date, 
+        len(rad_beams_ch_freq),
+        font="sans-sarif",
+    )
+    for j, rad_beam in enumerate(rad_beams_ch_freq):
+        rad, beam, channel, tfreq = rad_beam[0], rad_beam[1], rad_beam[2], rad_beam[3]
+        tx = tfreq if channel == 2 else tfreq + 0.2 
+        title = fr"({chr(97+j)}) Rad: {rad} / Beam: {beam} / ch: {channel} / $f_0$: {tfreq} MHz"
+        radar = Radar(rad, dates, type="fitacf")
+        radar.calculate_ground_range()
+        df = radar.df.copy()
+        logger.info(f"Reading radar: {rad} / Beam: {beam} / Unique: {df.tfreq.unique()}, {df.channel.unique()}, {df.bmnum.unique()}")
+        if channel:
+            df = df[df.channel==channel]
+        df["unique_tfreq"] = df.tfreq.apply(lambda x: int(x/0.5)*0.5)
+        v, tf = np.array(df.v), np.array(df.unique_tfreq)
+        v[tf==10.5] *= -1
+        df.v = v
+        if tfreq: 
+            df = df[df.unique_tfreq==tfreq]
+        ax = rti.addParamPlot(
+            rad, df, 
+            beam, title=title,
+            p_max=50, p_min=-100,
+            xlabel="Time, UT" if j==len(rad_beams_ch_freq)-1 else "", 
+            ylabel="Slant Range, km", 
+            zparam="v", label=r"Velocity, $ms^{-1}$",
+            cmap="RdBu", cbar=j==0, add_gflg=False,
+            yparam="srange", kind="scatter"
+        )
+        # rti.add_conjugate_eclipse(rad, beam, dates, ax)
+        # ddates = [
+        #     dates[0] + dt.timedelta(minutes=int(1*i)) 
+        #     for i in np.arange(int((dates[1]-dates[0]).total_seconds()/60)+1)
+        # ]
+        rti.overlay_eclipse_shadow(
+            rad, beam, dates, ax, j==len(rad_beams_ch_freq)-1, 0.05
+        )
+        ax.set_ylim(range)
+        ax.set_xlim(dates)
+    rti.save(f"figures_2021_Special/rti.{rad}-{beam}.png")
+    rti.close()
     return

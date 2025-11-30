@@ -73,10 +73,10 @@ class RangeTimePlot(object):
         self.unique_times = unique_times
         self.num_subplots = num_subplots
         self._num_subplots_created = 0
-        self.fig = plt.figure(figsize=(8, 3*num_subplots), dpi=dpi) # Size for website
+        self.fig = plt.figure(figsize=(8, 3*num_subplots), dpi=300) # Size for website
         self.fig_title = fig_title
-        mpl.rcParams.update({"xtick.labelsize": 12, "ytick.labelsize":12, "font.size":12})
-        utils.setsize(12)
+        mpl.rcParams.update({"xtick.labelsize": 15, "ytick.labelsize":15, "font.size":15})
+        utils.setsize(15)
         return
     
     def addParamPlot(
@@ -96,10 +96,10 @@ class RangeTimePlot(object):
         ax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
         hours = mdates.HourLocator(byhour=range(0, 24, 1))
         ax.xaxis.set_major_locator(hours)
-        ax.set_xlabel(xlabel, fontdict={"size":12})
+        ax.set_xlabel(xlabel, fontdict={"size":15})
         ax.set_xlim([self.unique_times[0], self.unique_times[-1]])
         # ax.set_ylim(self.nrang)
-        ax.set_ylabel(ylabel, fontdict={"size":12})
+        ax.set_ylabel(ylabel, fontdict={"size":15})
         ax.text(0.95, 0.95, title, ha="right", va="top", transform=ax.transAxes)
         if add_gflg:
             Zx = np.ma.masked_where(Zg==0, Zg)
@@ -187,7 +187,7 @@ class RangeTimePlot(object):
             ddates,
             srange,
             1-p.T,
-            cmap="gray_r", alpha=0.6,
+            cmap="Reds", alpha=0.6,
             levels=[0.1, 0.5, 1]
         )
         cs = ax.contour(
@@ -225,7 +225,7 @@ class RangeTimePlot(object):
     def _add_axis(self):
         self._num_subplots_created += 1
         ax = self.fig.add_subplot(self.num_subplots, 1, self._num_subplots_created)
-        ax.tick_params(axis="both", labelsize=12)
+        ax.tick_params(axis="both", labelsize=15)
         if self._num_subplots_created == 1:
             ax.text(0.05, 1.05, self.fig_title, ha="left", va="center", transform=ax.transAxes, fontdict=dict(size=15))
         return ax

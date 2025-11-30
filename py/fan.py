@@ -99,7 +99,7 @@ class Fan(object):
             coords=self.coord,
             plot_date=self.date,
         )
-        ax.overaly_coast_lakes(lw=0.4, alpha=0.4)
+        ax.overaly_coast_lakes(lw=0.4, alpha=0.4, zorder=6)
         # plt_lons = np.arange(int(self.extent[0]/15)*15, int((self.extent[1]+10)/15)*15, 15)
         if self.extent[0] < self.extent[1]:
             mark_lons = np.arange(int(self.extent[0]/30)*30, int((self.extent[1]+10)/30)*30, 30)

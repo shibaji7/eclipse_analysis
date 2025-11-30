@@ -482,7 +482,8 @@ class SDCarto(GeoAxes):
             colors="k", 
             linewidths=0.5,
             levels=[0.2, 0.4, 0.6, 0.75, 1.0],
-            zorder=1, alpha=0.6,
+            #zorder=1, 
+            alpha=0.6,
         )
         im = self.contourf(
             d.glon,
@@ -492,7 +493,7 @@ class SDCarto(GeoAxes):
             cmap="gray_r", 
             alpha=0.6,
             levels=[0.2, 0.4, 0.6, 0.75, 1.0],
-            zorder=1,
+            # zorder=1,
         )
         self.clabel(cs, inline=True, fontsize=6, fmt='%.2f')
         Z = np.cos(np.deg2rad(d.sza.values))
@@ -507,7 +508,7 @@ class SDCarto(GeoAxes):
             alpha=0.5, shading="nearest",
             lw=0.0,
             vmin=0., vmax=0.5,
-            zorder=0,
+            # zorder=0,
         )
         if cb:
             utils.setsize(10)

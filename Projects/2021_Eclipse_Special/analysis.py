@@ -27,24 +27,24 @@ from plotutils import (
     create_Digisonde_plots,
     create_map_plot_cpcp_sd,
     create_MCM_plots,
+    create_rti_plots,
+    create_overlay_amp_plots,
 )
 
 
 methods = [
     # "plot_fov",
     # "plot_maps", 
-    "plot_hall_conductivity",
+    # "plot_hall_conductivity",
     # "fan_plot_fir", 
-    # "others"
+    # "rti_plots",
+    "others"
 ]
 setup()
 
 if "others" in methods:
-    create_MCM_plots()
-    create_mix_ts()
-    create_Digisonde_plots()
     create_rays()
-    create_rays(run_name="Dec2021_gitm_base_Modeled")
+    # create_rays(run_name="Dec2021_gitm_base_Modeled")
 
 if "plot_fov" in methods:
     ## Create 2021 Eclipse Geometry on southerin hemisphere
@@ -59,7 +59,7 @@ if "plot_fov" in methods:
 if "fan_plot_fir" in methods:
     rads = ["fir", "mcm"]
     channel = [None, None]
-    tfreq = [[12.0, 12.2], None]
+    tfreq = [[12.0, 12.2, 13.5], None]
     dates = [
 
         dt.datetime(2021,12,4,6),
@@ -107,7 +107,8 @@ if "fan_plot_mcm" in methods:
     create_fan_plots(rads, dates, tfreq=tfreq, channel=channel)
 
 if "plot_maps" in methods:
-    create_map_plots()
+    # create_map_plots()
+    create_overlay_amp_plots()
 
 if "plot_hall_conductivity" in methods:
     plot_hall_conductivity(cond="Hall")
@@ -118,3 +119,21 @@ if "plot_hall_conductivity" in methods:
 #     calculate_decay_rate
 
 
+if "rti_plots" in methods:
+    create_MCM_plots()
+    create_mix_ts()
+    create_Digisonde_plots()
+    rad_beams = [
+        ("fir", 7, 1, 12.),
+        ("fir", 7, 2, 10.5), 
+        ("fir", 7, 2, 12.0), 
+        # ("fir", 7, 1, 12.2), 
+        ("fir", 7, 2, 13.5), 
+        ("fir", 7, 2, 15.5), 
+    ]
+    yscale = "srange" 
+    range = [0,4500]
+    channel = 2
+    tfreq = 12
+    dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
+    create_rti_plots(rad_beams, dates, range=range)
