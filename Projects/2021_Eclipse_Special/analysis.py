@@ -34,11 +34,11 @@ from plotutils import (
 
 methods = [
     # "plot_fov",
-    # "plot_maps", 
+    "plot_maps", 
     # "plot_hall_conductivity",
     # "fan_plot_fir", 
     # "rti_plots",
-    "others"
+    # "others"
 ]
 setup()
 

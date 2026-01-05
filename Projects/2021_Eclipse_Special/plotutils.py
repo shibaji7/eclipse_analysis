@@ -608,7 +608,7 @@ def create_overlay_amp_plots(
         im = ax.pcolor(
             XYZ[:, :, 0], XYZ[:, :, 1], Jpar,
             alpha=0.5, norm=TwoSlopeNorm(vcenter=0, vmin=-1.5, vmax=1.5),
-            zorder=3, cmap="PiYG"
+            zorder=3, cmap="inferno"
         )
         if j==7:
             utils.setsize(10)
