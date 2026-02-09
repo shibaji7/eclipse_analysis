@@ -616,7 +616,7 @@ def create_overlay_amp_plots(
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
-            cb.set_label(r"$AMPERE$, $\mu A$")
+            cb.set_label(r"$AMPERE$, $\mu A/m^2$")
 
         imfs = get_imfs(date)
 
