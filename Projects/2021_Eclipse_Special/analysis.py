@@ -34,10 +34,10 @@ from plotutils import (
 
 methods = [
     # "plot_fov",
-    "plot_maps", 
+    # "plot_maps", 
     # "plot_hall_conductivity",
     # "fan_plot_fir", 
-    # "rti_plots",
+    "rti_plots",
     # "others"
 ]
 setup()
@@ -81,7 +81,7 @@ if "fan_plot_fir" in methods:
              ]
     create_fan_plots_stack(
         rads, dates, tfreq=tfreq, channel=channel,
-        central_longitude=100, central_latitude=-60.0,
+        central_longitude=100, central_latitude=-90.0,
         #extent=[-40, -120, -90, -50], 
         extent=[-180, 180, -90, -50], 
         plt_lats = np.arange(-90, -49, 10), 

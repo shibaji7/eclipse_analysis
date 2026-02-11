@@ -163,7 +163,7 @@ class Fan(object):
         Generate plot with dataset overlaid
         """
         ax = ax if ax else self.add_axes()
-        ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=8)
+        ax.overlay_radar(rad, font_color=col, yOffset=yOffset, xOffset=xOffset, markerColor=col, fontSize=10)
         ax.overlay_fov(rad, lineColor=col, maxGate=maxGate,)
         if len(frame) > 0: ax.overlay_data(
             rad, frame, self.proj, maxGate=maxGate, 

@@ -469,8 +469,8 @@ def create_fan_plots_stack(
         rads, dates[0], f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
-        plt_lats=plt_lats, nrows=3, ncols=4,sup_title=False,
-        mark_lon=mark_lon
+        plt_lats=plt_lats, nrows=4, ncols=3,sup_title=False,
+        mark_lon=mark_lon, figsize=(3,3),
     )
     for j, date in enumerate(dates):
         utils.setsize(12)
@@ -498,7 +498,7 @@ def create_fan_plots_stack(
             ]
             # o = o[o.bmnum==7]
             fan.generate_fov(
-                rad, o, ax=ax, cbar=((j==3) * (i==0))|((j==7) * (i==1)),
+                rad, o, ax=ax, cbar=((j==2) * (i==0))|((j==5) * (i==1)),
                 eclipse_cb=j==len(dates)-1, 
                 # eclipse_cb=True,
                 p_max=p_max[i], p_min=p_min[i],
@@ -511,27 +511,27 @@ def create_fan_plots_stack(
                 ax.text(
                     -0.05, 0.05, "Ch[fir]: [1, 2]",
                     ha="left", va="bottom",
-                    transform=ax.transAxes, fontsize="xx-small",
+                    transform=ax.transAxes, fontsize="x-small",
                     rotation=90
                 )
                 ax.text(
                     0.95, 1.05, f"$f_0$[fir]= {tfreq[0] if tfreq[0] else 'all'} MHz",
                     ha="right", va="bottom",
-                    transform=ax.transAxes, fontsize="xx-small",
+                    transform=ax.transAxes, fontsize="x-small",
                 )
             if j==4:
                 ax.text(
                     -0.05, 0.05, "Ch[mcm]: [1]",
                     ha="left", va="bottom",
-                    transform=ax.transAxes, fontsize="xx-small",
+                    transform=ax.transAxes, fontsize="x-small",
                     rotation=90
                 )
                 ax.text(
                     0.95, 1.01, f"$f_0$[mcm]= all MHz",
                     ha="right", va="bottom",
-                    transform=ax.transAxes, fontsize="xx-small",
+                    transform=ax.transAxes, fontsize="x-small",
                 )
-        ax.text(0.05, 1.05, tags[j] + f" {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
+        ax.text(0.05, 1.05, tags[j] + f" {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "x-small", "weight": "bold", "color": "k"})
         # # ax.add_square_grid(-60,-85,10)
         
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.1)
@@ -540,9 +540,9 @@ def create_fan_plots_stack(
     return
 
 def create_overlay_amp_plots(
-    extent=[-180, 180, -90, -50], 
+    extent=[-180, 180, -90, -60], 
     plt_lats = np.arange(-90, -49, 10), cb=False, mark_lon=-50,
-    central_longitude=80, central_latitude=-70.0,
+    central_longitude=80, central_latitude=-90.0,
 ):
     from readdmsp import read_1D_dmsp_datasets
     dmspdata_south_boundary = read_1D_dmsp_datasets()
@@ -554,8 +554,8 @@ def create_overlay_amp_plots(
         [], dt.datetime(2021,12,4), f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
-        plt_lats=plt_lats, nrows=3, ncols=4, sup_title=False,
-        mark_lon=mark_lon, coord="geo"
+        plt_lats=plt_lats, nrows=4, ncols=3, sup_title=False,
+        mark_lon=mark_lon, coord="geo", figsize=(3, 3)
     )
     dates = [
         dt.datetime(2021, 12, 4, 6),
@@ -591,7 +591,7 @@ def create_overlay_amp_plots(
             alpha=0.8, norm=TwoSlopeNorm(vcenter=0, vmin=-20, vmax=20),
              zorder=2, cmap="RdBu"
         )
-        if j==3:
+        if j==2:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
@@ -610,7 +610,7 @@ def create_overlay_amp_plots(
             alpha=0.5, norm=TwoSlopeNorm(vcenter=0, vmin=-1.5, vmax=1.5),
             zorder=3, cmap="inferno"
         )
-        if j==7:
+        if j==5:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
@@ -656,17 +656,17 @@ def create_overlay_amp_plots(
         if j==0:
             qk = ax.quiverkey(
                 q,
-                X=1.05,
-                Y=0.8,
-                U=500,
-                angle=90,
-                label="500 m/s",
-                labelpos="E",
+                X=0.2,
+                Y=0.2,
+                U=300,
+                # angle=90,
+                label="300 m/s",
+                labelpos="S",
                 coordinates="axes",
                 labelsep=0.05
             )
             qk.text.set_fontsize("x-small")
-            qk.text.set_rotation(90)
+            # qk.text.set_rotation(90)
         txt = fr"$\phi_0$={np.round(np.max(pot)-np.min(pot),1)} kV" + "\n"
         txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
         txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
