@@ -34,10 +34,10 @@ from plotutils import (
 
 methods = [
     # "plot_fov",
-    # "plot_maps", 
+    "plot_maps", 
     # "plot_hall_conductivity",
     # "fan_plot_fir", 
-    "rti_plots",
+    # "rti_plots",
     # "others"
 ]
 setup()
@@ -63,21 +63,21 @@ if "fan_plot_fir" in methods:
     dates = [
 
         dt.datetime(2021,12,4,6),
-             dt.datetime(2021,12,4,6,30),
+            #  dt.datetime(2021,12,4,6,30),
              dt.datetime(2021,12,4,7), 
              dt.datetime(2021,12,4,7,30),
              #dt.datetime(2021,12,4,7,35),
              dt.datetime(2021,12,4,7,40),
              #dt.datetime(2021,12,4,7,45),
              dt.datetime(2021,12,4,7,50),
-             dt.datetime(2021,12,4,7,55),
+            #  dt.datetime(2021,12,4,7,55),
             #  dt.datetime(2021,12,4,8),
-              dt.datetime(2021,12,4,8, 5), #dt.datetime(2021,12,4,7,40),
+            #   dt.datetime(2021,12,4,8, 5), #dt.datetime(2021,12,4,7,40),
             #  dt.datetime(2021,12,4,8,30),
-            dt.datetime(2021,12,4,8, 10),
+            # dt.datetime(2021,12,4,8, 10),
             dt.datetime(2021,12,4,8, 15),
-            dt.datetime(2021,12,4,8, 30),
-            dt.datetime(2021,12,4,9,30),
+            # dt.datetime(2021,12,4,8, 30),
+            # dt.datetime(2021,12,4,9,30),
              ]
     create_fan_plots_stack(
         rads, dates, tfreq=tfreq, channel=channel,

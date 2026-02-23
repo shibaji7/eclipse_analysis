@@ -336,7 +336,8 @@ class PlotRays(object):
         if kind == "pf":
             o, cmap, label, norm = (
                 getattr(self, kind),
-                "PuOr",
+                # "PuOr",
+                "Reds",
                 # "YlGnBu",
                 r"$f_0$ [MHz]",
                 colors.Normalize(4, 6),
@@ -416,7 +417,7 @@ class PlotRays(object):
             alpha=1.,
             zorder=3,
         )
-        ax.plot(dist[0, :], height[200, :], ls="--", lw=0.3, color="k", zorder=3)
+        ax.plot(dist[0, :], height[200, :], ls="--", lw=1, color="k", zorder=3)
         ax.set_xlim(right=xlim_max)
         if add_cbar:
             pos = ax.get_position()
@@ -451,6 +452,7 @@ class PlotRays(object):
                 lw=1.2,
             )
         for i, elv in enumerate(self.elvs):
+            doPlot = False
             ray_path_data, ray_data = (
                 self.rto.ray_path[elv],
                 rays[rays.initial_elev == elv],
@@ -465,34 +467,33 @@ class PlotRays(object):
             alpha = 0.3
             if ray_path_data.ray_label.iloc[0] == -1:# and ray_path_data.ground_range.iloc[-1]<1000:
                 lcolor = "m"
+                doPlot = True if np.mod(i, 10) == 0 else False
             # elif ray_path_data.ray_label.iloc[0] == -1 and ray_path_data.ground_range.iloc[-1]>1000:
             #     lcolor, alpha, lw = "darkgreen", 1, 1
             elif ray_path_data.ray_label.iloc[0] == -2:
                 lcolor = "r"
             elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]>100:
-                lcolor, alpha, lw = "darkgreen", 1, 1
-                print(
-                    ray_path_data.ground_range.tolist(), ray_path_data.height.tolist()
-                )
-                print(r.tolist())
-                print("____________________________________________________________________")
+                lcolor, alpha, lw, doPlot = "darkgreen", 1, 1, True
             elif ray_path_data.ray_label.iloc[0] == 1: #and ray_path_data.height.iloc[-1]==0:
                 lcolor = "k"
+                doPlot = True if np.mod(i, 10) == 0 else False
             # elif ray_label == 1 and ray_path_data.height.iloc[-1]>100:
             #     lcolor, alpha, lw = "darkgreen", 1, 1
             if len(ped_angles) > 0:
                 if np.round(ray_path_data.elv.iloc[0], 1) in ped_angles:
                     lcolor, alpha, lw = "darkgreen", 1, 1
-            ax.plot(th, r, c=lcolor, zorder=3, alpha=alpha, ls="-", lw=lw)
+            if doPlot:
+                ax.plot(th, r, c=lcolor, zorder=3, alpha=alpha, ls="-", lw=lw)
             col = "k" if ray_label == 1 else "r"
-            if ray_label == 1 and ray_path_data.height.iloc[-1]==0:
-                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="k", zorder=4)
-            elif ray_label == -1: # and ray_path_data.ground_range.iloc[-1]<1000:
-                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=0.2, color="m", zorder=4)
-            elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]>100:
-                ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="darkgreen", zorder=4)
-            # elif (ray_label == 1 and ray_path_data.height.iloc[-1]>100) or (ray_label == -1 and ray_path_data.ground_range.iloc[-1]>1000):
-            #     ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=1, color="darkgreen", zorder=4)
+            if doPlot:
+                if ray_label == 1 and ray_path_data.height.iloc[-1]==0:
+                    ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="k", zorder=4)
+                elif ray_label == -1: # and ray_path_data.ground_range.iloc[-1]<1000:
+                    ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=0.2, color="m", zorder=4)
+                elif ray_path_data.ray_label.iloc[0] == 1 and ray_path_data.height.iloc[-1]>100:
+                    ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=2, color="darkgreen", zorder=4)
+                # elif (ray_label == 1 and ray_path_data.height.iloc[-1]>100) or (ray_label == -1 and ray_path_data.ground_range.iloc[-1]>1000):
+                #     ax.scatter([th.iloc[-1]], [r.iloc[-1]], marker="s", s=1, color="darkgreen", zorder=4)
         if add_time:
             stitle = "%s UT" % self.event.strftime("%Y-%m-%d %H:%M")
             ax.text(

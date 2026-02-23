@@ -405,7 +405,7 @@ def create_rays(run_name="Dec2021_gitm_base_Modeled"):
         rays.RayTraceObject(dt.datetime(2021, 12, 4, 8), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
         rays.RayTraceObject(dt.datetime(2021, 12, 4, 8, 15), "fir", 7, limit_elvs=[15, 40], run_name=run_name),
     ]
-    rp = rays.PlotRays(rtos_base[0], nrows=len(rtos_ecl), ncols=2, arc=False)
+    rp = rays.PlotRays(rtos_base[0], nrows=len(rtos_ecl), ncols=2, arc=False, lw=.8,)
     rp.lay_rays(
         text="(A) 7:00 UT",
         add_cbar=False,
@@ -421,6 +421,7 @@ def create_rays(run_name="Dec2021_gitm_base_Modeled"):
             add_tag=False,
             dtype="Base",
             add_time=False,
+            xlabel="" if i!=2 else "Ground Range, km",
         )
     ax_num = [1, 3, 5, 7]
     for i, ray in enumerate(rtos_ecl):
@@ -432,6 +433,7 @@ def create_rays(run_name="Dec2021_gitm_base_Modeled"):
             add_tag=i==0,
             dtype="Eclipse",
             add_time=False,
+            xlabel="" if i!=3 else "Ground Range, km",
         )
     rp.save(f"figures_2021_Special/Rays.png")
     rp.close()
@@ -445,7 +447,7 @@ def create_fan_plots_stack(
     tags = ["(A)", "(B)", "(C)", "(D)", "(E)", "(F)", "(G)", "(H)", "(I)", "(J)", "(K)", "(L)"],
     p_max=[500], p_min=[200], mark_lon=120, YO=[2, -3], XO=[-5, -1],
     labels = ["Velocity(fir), m/s", "Velocity(mcm), m/s"],
-    colors= ["r", "b"], cmaps=["RdBu", "GnBu"]
+    colors= ["r", "b"], cmaps=["jet_r", "GnBu"]
 ):
     radars = dict()
     from readdmsp import read_1D_dmsp_datasets
@@ -469,7 +471,7 @@ def create_fan_plots_stack(
         rads, dates[0], f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
-        plt_lats=plt_lats, nrows=4, ncols=3,sup_title=False,
+        plt_lats=plt_lats, nrows=3, ncols=2,sup_title=False,
         mark_lon=mark_lon, figsize=(3,3),
     )
     for j, date in enumerate(dates):
@@ -498,7 +500,7 @@ def create_fan_plots_stack(
             ]
             # o = o[o.bmnum==7]
             fan.generate_fov(
-                rad, o, ax=ax, cbar=((j==2) * (i==0))|((j==5) * (i==1)),
+                rad, o, ax=ax, cbar=((j==3) * (i==0))|((j==1) * (i==1)),
                 eclipse_cb=j==len(dates)-1, 
                 # eclipse_cb=True,
                 p_max=p_max[i], p_min=p_min[i],
@@ -519,7 +521,7 @@ def create_fan_plots_stack(
                     ha="right", va="bottom",
                     transform=ax.transAxes, fontsize="x-small",
                 )
-            if j==4:
+            if j==2:
                 ax.text(
                     -0.05, 0.05, "Ch[mcm]: [1]",
                     ha="left", va="bottom",
@@ -554,22 +556,22 @@ def create_overlay_amp_plots(
         [], dt.datetime(2021,12,4), f"", cb=cb,
         central_longitude=central_longitude, 
         central_latitude=central_latitude, extent=extent,
-        plt_lats=plt_lats, nrows=4, ncols=3, sup_title=False,
+        plt_lats=plt_lats, nrows=3, ncols=2, sup_title=False,
         mark_lon=mark_lon, coord="geo", figsize=(3, 3)
     )
     dates = [
-        dt.datetime(2021, 12, 4, 6),
-        dt.datetime(2021, 12, 4, 6, 30),
+        # dt.datetime(2021, 12, 4, 6),
+        # dt.datetime(2021, 12, 4, 6, 30),
         dt.datetime(2021, 12, 4, 7, 0),
         dt.datetime(2021, 12, 4, 7, 30),
         dt.datetime(2021, 12, 4, 7, 40),
         dt.datetime(2021, 12, 4, 7, 50),
         dt.datetime(2021, 12, 4, 8),
-        dt.datetime(2021, 12, 4, 8, 14),
-        dt.datetime(2021, 12, 4, 8, 30),
-        dt.datetime(2021, 12, 4, 8, 44),
+        # dt.datetime(2021, 12, 4, 8, 14),
+        # dt.datetime(2021, 12, 4, 8, 30),
+        # dt.datetime(2021, 12, 4, 8, 44),
         dt.datetime(2021, 12, 4, 9),
-        dt.datetime(2021, 12, 4, 9, 30)
+        # dt.datetime(2021, 12, 4, 9, 30)
     ]
     for j, date in enumerate(dates):
         utils.setsize(12)
@@ -578,8 +580,7 @@ def create_overlay_amp_plots(
         
 
         pot, plats, plons = get_2D_data(date, var="Pot")
-        Jpar, jlats, jlons = get_2D_data(date)
-
+        Jpar, jlats, jlons = get_2D_data(date,)
         XYZ = fan.proj.transform_points(
             fan.geo, 
             plons, 
@@ -591,33 +592,34 @@ def create_overlay_amp_plots(
             alpha=0.8, norm=TwoSlopeNorm(vcenter=0, vmin=-20, vmax=20),
              zorder=2, cmap="RdBu"
         )
-        if j==2:
+        if j==1:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
             cb.set_label(r"$\Phi [GITM + AMPERE]$, $kV$")
-
+        utils.setsize(12)
         XYZ = fan.proj.transform_points(
             fan.geo, 
             jlons, 
             jlats
         )
         Jpar = np.ma.masked_where(np.abs(Jpar)==0., Jpar)
-        im = ax.pcolor(
+        im = ax.contourf(
             XYZ[:, :, 0], XYZ[:, :, 1], Jpar,
-            alpha=0.5, norm=TwoSlopeNorm(vcenter=0, vmin=-1.5, vmax=1.5),
-            zorder=3, cmap="inferno"
+            alpha=0.7, norm=TwoSlopeNorm(vcenter=0, vmin=-1.5, vmax=1.5),
+            zorder=3, cmap="jet", levels=np.arange(-2, 2.1, 0.25)
         )
-        if j==5:
+        if j==3:
             utils.setsize(10)
             cpos = [1.05, 0.1, 0.025, 0.6]
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
+            cb.set_ticks([-2, -1, 0, 1, 2])
             utils.setsize(10)
             cb.set_label(r"$AMPERE$, $\mu A/m^2$")
-
+        utils.setsize(12)
         imfs = get_imfs(date)
 
         XYZ = fan.proj.transform_points(

@@ -30,7 +30,8 @@ def get_pot_drop(file_path=None, var="J_par"):
     ds.close()
     return varsl, time
 
-def get_2D_data(date, file_path=None,var="J_par"):
+
+def get_2D_data(date, file_path=None,var="J_par", intp=False):
     ds = read_mix(file_path)
     times = mdj(ds.time.values)
     i = times.index(date)
@@ -39,10 +40,76 @@ def get_2D_data(date, file_path=None,var="J_par"):
         ds["geo_lat"].values[i, :, :], 
         ds["geo_lon"].values[i, :, :]
     )
-
     ds.close()
+    if intp:
+        lats, lons, data = spherical_interp_latlon(lats, lons, data)
     return (data, lats, lons)
 
+
+import numpy as np
+from scipy.interpolate import RectSphereBivariateSpline
+
+def spherical_interp_latlon(jlats, jlons, Jpar, up=4):
+    # jlats, jlons, Jpar shape: (nlat, nlon)
+
+    lat = jlats[:, 0].astype(float)            # (nlat,)
+    lon = jlons[0, :].astype(float)            # (nlon,)
+
+    # Put lon in [0, 360), then sort both axes
+    lon = (lon + 360.0) % 360.0
+    lat_idx = np.argsort(lat)
+    lon_idx = np.argsort(lon)
+
+    lat = lat[lat_idx]
+    lon = lon[lon_idx]
+    z = Jpar[lat_idx, :][:, lon_idx]
+
+    # Remove duplicate axis values (required by spline)
+    lat, lat_keep = np.unique(lat, return_index=True)
+    lon, lon_keep = np.unique(lon, return_index=True)
+    z = z[lat_keep, :][:, lon_keep]
+
+    # RectSphere uses colatitude u in (0, pi), longitude v in [0, 2pi)
+    u = np.deg2rad(90.0 - lat)                 # colat
+    v = np.deg2rad(lon)
+
+    # Avoid exact poles
+    eps = 1e-8
+    u = np.clip(u, eps, np.pi - eps)
+
+    # Spline requires strictly increasing u and v.
+    u_order = np.argsort(u)
+    u = u[u_order]
+    z = z[u_order, :]
+    u, u_keep = np.unique(u, return_index=True)
+    z = z[u_keep, :]
+
+    v_order = np.argsort(v)
+    v = v[v_order]
+    z = z[:, v_order]
+    v, v_keep = np.unique(v, return_index=True)
+    z = z[:, v_keep]
+
+    if len(u) < 2 or len(v) < 2:
+        raise ValueError("Not enough unique spherical grid points for interpolation.")
+
+    # High-res target grid
+    lat_hi = np.linspace(lat.min(), lat.max(), len(lat) * up)
+    lon_hi = np.linspace(lon.min(), lon.max(), len(lon) * up)
+    u_hi = np.deg2rad(90.0 - lat_hi)
+    v_hi = np.deg2rad(lon_hi)
+    u_hi = np.clip(u_hi, eps, np.pi - eps)
+    if u_hi[0] > u_hi[-1]:
+        u_hi = u_hi[::-1]
+        lat_hi = lat_hi[::-1]
+
+    # Spherical interpolation
+    spl = RectSphereBivariateSpline(u, v, z, s=0.0)
+    Jpar_hi = spl(u_hi, v_hi, grid=True)       # shape (len(lat_hi), len(lon_hi))
+
+    LAT_hi, LON_hi = np.meshgrid(lat_hi, lon_hi, indexing="ij")
+    print(LON_hi, LAT_hi)
+    return LAT_hi, LON_hi, Jpar_hi
 
 def read_sd(file=None):
     if file is None:
