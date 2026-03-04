@@ -34,10 +34,10 @@ from plotutils import (
 
 methods = [
     # "plot_fov",
-    "plot_maps", 
+    # "plot_maps", 
     # "plot_hall_conductivity",
     # "fan_plot_fir", 
-    # "rti_plots",
+    "rti_plots",
     # "others"
 ]
 setup()
@@ -120,20 +120,28 @@ if "plot_hall_conductivity" in methods:
 
 
 if "rti_plots" in methods:
-    create_MCM_plots()
-    create_mix_ts()
-    create_Digisonde_plots()
-    rad_beams = [
-        ("fir", 7, 1, 12.),
-        ("fir", 7, 2, 10.5), 
-        ("fir", 7, 2, 12.0), 
-        # ("fir", 7, 1, 12.2), 
-        ("fir", 7, 2, 13.5), 
-        ("fir", 7, 2, 15.5), 
-    ]
-    yscale = "srange" 
-    range = [0,4500]
-    channel = 2
-    tfreq = 12
-    dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
-    create_rti_plots(rad_beams, dates, range=range)
+    # create_MCM_plots()
+    # create_mix_ts()
+    # create_Digisonde_plots()
+    # rad_beams = [
+    #     ("fir", 7, 1, 12.),
+    #     ("fir", 7, 2, 10.5), 
+    #     ("fir", 7, 2, 12.0), 
+    #     # ("fir", 7, 1, 12.2), 
+    #     ("fir", 7, 2, 13.5), 
+    #     ("fir", 7, 2, 15.5), 
+    # ]
+    # yscale = "srange" 
+    # range = [0,4500]
+    # channel = 2
+    # tfreq = 12
+    # dates = [dt.datetime(2021,12,4,6), dt.datetime(2021,12,4,10)]
+    # create_rti_plots(rad_beams, dates, range=range)
+
+    from solar import SolarDataset
+    sol = SolarDataset([
+        dt.datetime(2021, 12, 4),
+        dt.datetime(2021, 12, 5), 
+    ])
+    sol._load_omni_()
+    sol.create_stackplots_omni("figures_2021_Special/Solar.png")

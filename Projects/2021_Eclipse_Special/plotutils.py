@@ -1388,7 +1388,7 @@ def create_rti_plots(
             xlabel="Time, UT" if j==len(rad_beams_ch_freq)-1 else "", 
             ylabel="Slant Range, km", 
             zparam="v", label=r"Velocity, $ms^{-1}$",
-            cmap="RdBu", cbar=j==0, add_gflg=False,
+            cmap="jet_r", cbar=j==0, add_gflg=False,
             yparam="srange", kind="scatter"
         )
         # rti.add_conjugate_eclipse(rad, beam, dates, ax)
