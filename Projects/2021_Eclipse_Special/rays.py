@@ -431,8 +431,8 @@ class PlotRays(object):
             cbax = self.fig.colorbar(
                 im, cax, spacing="uniform", orientation="vertical", cmap="plasma"
             )
-            _ = cbax.set_label(label, fontsize=11)
-            cbax.ax.tick_params(axis="both", labelsize=11)
+            _ = cbax.set_label(label, fontsize=14)
+            cbax.ax.tick_params(axis="both", labelsize=14)
         rays = self.rto.rays
         self.elvs = rays.initial_elev
         if tag_distance > 100:

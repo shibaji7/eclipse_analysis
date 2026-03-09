@@ -11,8 +11,21 @@ def read_digisonde(file_path=None):
         # Adjust this path as necessary for your environment
         file_path = DataBase_Path + "result_2021_12_04.nc"
     print("Reading Digisonde data from:", file_path)
-    ds = open_dataset(file_path)
+    ds = _open_dataset_with_fallback(file_path)
     return ds
+
+
+def _open_dataset_with_fallback(file_path):
+    last_error = None
+    for engine in ("netcdf4", "scipy"):
+        try:
+            return open_dataset(file_path, engine=engine)
+        except Exception as err:
+            last_error = err
+    raise ValueError(
+        f"Unable to open Digisonde file '{file_path}' with supported engines "
+        f"('netcdf4', 'scipy'). Last error: {last_error}"
+    )
 
 def read_velocity_data(file_path=None, component="VXF"):
     ds = read_digisonde(file_path)
@@ -56,7 +69,7 @@ def create_base_line(
 
 def get_locational_info(file_path="-74.62lat_-164.24lon_20211204070000_20211204091500.nc"):
     file_path = DataBase_Path + file_path
-    ds = open_dataset(file_path)
+    ds = _open_dataset_with_fallback(file_path)
     lat = ds["glat"].values.item()
     lon = ds["glon"].values.item()
     time, eof = (
@@ -100,9 +113,13 @@ def consolidate_horizontal_data():
     )
 
 def get_hv_by_date(dx=dt.datetime(2021,12,4,7,30)):
-    dates, vxf, _ = read_velocity_data(component="VXF")
-    _, vyf, _ = read_velocity_data(component="VYF")
-    _, vzf, _ = read_velocity_data(component="VZF")
+    try:
+        dates, vxf, _ = read_velocity_data(component="VXF")
+        _, vyf, _ = read_velocity_data(component="VYF")
+        _, vzf, _ = read_velocity_data(component="VZF")
+    except Exception as err:
+        print(f"Warning: Digisonde data unavailable for {dx}: {err}")
+        return {"VXF": np.nan, "VYF": np.nan, "VZF": np.nan}
     idx = np.argmin(np.abs(np.array(dates) - dx))
     print("Closest date found:", dates[idx])
     data = {
@@ -112,4 +129,5 @@ def get_hv_by_date(dx=dt.datetime(2021,12,4,7,30)):
     }
     return data
 
-get_hv_by_date()
+if __name__ == "__main__":
+    get_hv_by_date()

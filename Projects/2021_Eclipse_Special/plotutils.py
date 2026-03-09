@@ -855,7 +855,7 @@ def create_map_plots(
 
 
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.02)
-    fan.save(f"figures_2021_Special/Maps.png")
+    fan.save(f"figures_2021_Special/Maps_cpx.png")
     fan.close()
     return
 
