@@ -337,11 +337,12 @@ if __name__ == "__main__":
     # Radar("fhw", dates, type="fitacf")
     # Radar("cve", dates, type="fitacf")
     # Radar("cvw", dates, type="fitacf")
-    dates = [dt.datetime(2021,12,4), dt.datetime(2021,12,5)]
-    Radar("fir", dates, type="fitacf")
-    Radar("mcm", dates, type="fitacf")
+    # dates = [dt.datetime(2021,12,4), dt.datetime(2021,12,5)]
+    # Radar("fir", dates, type="fitacf")
+    # Radar("mcm", dates, type="fitacf")
     # dates = [dt.datetime(2017,5,27), dt.datetime(2017,5,28)]
     # Radar("bks", dates, type="fitacf")
     # Radar("fhe", dates, type="fitacf")
     # Radar("fhw", dates, type="fitacf")
+    Radar("sps", [dt.datetime(2021,12,3), dt.datetime(2021,12,5)], type="fitacf")
     pass

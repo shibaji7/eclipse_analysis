@@ -73,6 +73,13 @@ def create_RTI_plots():
             "mcm", 7, None, None,
             dict(
                 title = fr"(B) Rad: mcm / Beam: 7 / ch: all / $f_0$: 10.5 MHz",
+                cmap="GnBu", p_max=600, p_min=100, cbar=False
+            )
+        ), 
+        (
+            "sps", 6, None, None,
+            dict(
+                title = fr"(B) Rad: sps / Beam: 6 / ch: all / $f_0$: 10.5 MHz",
                 cmap="GnBu", p_max=600, p_min=100, cbar=True
             )
         ), 
