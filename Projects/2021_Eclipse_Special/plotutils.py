@@ -325,7 +325,7 @@ def create_mix_ts():
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
     ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
-    ax.text(0.05, 0.95, "(a) mcm/7", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, "(A) mcm/7", ha="left", va="center", transform=ax.transAxes)
 
     from read_digisonde import consolidate_horizontal_data
     dates, vhf, vhf_err, vhf_base, vhf_base_err, lat, lon, time_dig, eof = consolidate_horizontal_data()
@@ -347,7 +347,7 @@ def create_mix_ts():
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
     ax.axvline(dt.datetime(2021, 12, 4, 8, 6), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 9, 37), ls="--", lw=0.8, color="k")
-    ax.text(0.05, 0.95, r"(b) Jang Bogo/$(\theta,\phi)=(74.6^{\circ}S, 164.2^{\circ}E)$", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, r"(B) Jang Bogo/$(\theta,\phi)=(74.6^{\circ}S, 164.2^{\circ}E)$", ha="left", va="center", transform=ax.transAxes)
     tax = ax.twinx()
     tax.xaxis.set_major_formatter(DateFormatter(r"$%H^{%M}$"))
     tax.xaxis.set_major_locator(hours)
@@ -367,7 +367,7 @@ def create_mix_ts():
     ax.set_ylabel(r"$J_{||}$, $\mu A/m^2$", fontdict={"size":12})
     ax.set_xlim([dt.datetime(2021,12,4,5), dt.datetime(2021,12,4,10)])
     ax.plot(time, Jpar, "ko", ms=1)
-    ax.text(0.05, 0.95, "(c) AMPERE FACs, CPCP (pyMIX)", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.05, 0.95, "(C) AMPERE FACs, CPCP (pyMIX)", ha="left", va="center", transform=ax.transAxes)
     ax.axvline(dt.datetime(2021, 12, 4, 5, 29), ls="--", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7), ls="-", lw=0.8, color="k")
     ax.axvline(dt.datetime(2021, 12, 4, 7, 33), ls="-", lw=0.8, color="r")
@@ -451,6 +451,7 @@ def create_fan_plots_stack(
 ):
     radars = dict()
     from readdmsp import read_1D_dmsp_datasets
+    from read_digisonde import get_hv_by_date
     dmspdata_south_boundary = read_1D_dmsp_datasets()
     for rad, tf0, ch in zip(rads, tfreq, channel):
         radar = Radar(rad, dates, type="fitacf")
@@ -509,33 +510,67 @@ def create_fan_plots_stack(
                 label=labels[i], col=colors[i],
                 cmap=cmaps[i],
             )
-            if j==0:
-                ax.text(
-                    -0.05, 0.05, "Ch[fir]: [1, 2]",
-                    ha="left", va="bottom",
-                    transform=ax.transAxes, fontsize="x-small",
-                    rotation=90
-                )
-                ax.text(
-                    0.95, 1.05, f"$f_0$[fir]= {tfreq[0] if tfreq[0] else 'all'} MHz",
-                    ha="right", va="bottom",
-                    transform=ax.transAxes, fontsize="x-small",
-                )
-            if j==2:
-                ax.text(
-                    -0.05, 0.05, "Ch[mcm]: [1]",
-                    ha="left", va="bottom",
-                    transform=ax.transAxes, fontsize="x-small",
-                    rotation=90
-                )
-                ax.text(
-                    0.95, 1.01, f"$f_0$[mcm]= all MHz",
-                    ha="right", va="bottom",
-                    transform=ax.transAxes, fontsize="x-small",
-                )
+        ax.scatter(
+            164.24, -74.62,
+            s=20,
+            marker="^",
+            color="k",
+            zorder=3,
+            transform=cartopy.crs.PlateCarree(),
+            lw=0.8,
+            alpha=0.8,
+        )
+        hv = get_hv_by_date(date)
+        print("Digisonde HV:", hv)
+        q = ax.quiver(
+            np.array([[164.24]]),
+            np.array([[-74.62]]),
+            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]),
+            transform=cartopy.crs.PlateCarree(),
+            headwidth=2, headlength=2, scale=1500, color="m",
+            zorder=3
+        )
+        if j == 0:
+            qk = ax.quiverkey(
+                q,
+                X=1.05,
+                Y=0.8,
+                U=500,
+                angle=90,
+                label="500 m/s",
+                labelpos="E",
+                coordinates="axes",
+                labelsep=0.05
+            )
+            qk.text.set_fontsize("x-small")
+            qk.text.set_rotation(90)
+        if j == 0:
+            ax.text(
+                -0.05, 0.05, "Ch[fir]: [1, 2]",
+                ha="left", va="bottom",
+                transform=ax.transAxes, fontsize="x-small",
+                rotation=90
+            )
+            ax.text(
+                0.95, 1.05, f"$f_0$[fir]= {tfreq[0] if tfreq[0] else 'all'} MHz",
+                ha="right", va="bottom",
+                transform=ax.transAxes, fontsize="x-small",
+            )
+        if j == 2:
+            ax.text(
+                -0.05, 0.05, "Ch[mcm]: [1]",
+                ha="left", va="bottom",
+                transform=ax.transAxes, fontsize="x-small",
+                rotation=90
+            )
+            ax.text(
+                0.95, 1.01, f"$f_0$[mcm]= all MHz",
+                ha="right", va="bottom",
+                transform=ax.transAxes, fontsize="x-small",
+            )
         ax.text(0.05, 1.05, tags[j] + f" {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "x-small", "weight": "bold", "color": "k"})
         # # ax.add_square_grid(-60,-85,10)
-        
+
     fan.fig.subplots_adjust(hspace=0.1, wspace=0.1)
     fan.save(f"figures_2021_Special/{date.strftime('%Y%m%d%H%M')}.png")
     fan.close()
@@ -598,7 +633,7 @@ def create_overlay_amp_plots(
             cax = ax.inset_axes(cpos, transform=ax.transAxes)
             cb = fan.fig.colorbar(im, ax=ax, cax=cax)
             utils.setsize(10)
-            cb.set_label(r"$\Phi [GITM + AMPERE]$, $kV$")
+            cb.set_label(r"$\Phi [pyMIX]$, $kV$")
         utils.setsize(12)
         XYZ = fan.proj.transform_points(
             fan.geo, 
@@ -634,45 +669,9 @@ def create_overlay_amp_plots(
             dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
         )
         ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5)
-        ax.scatter(
-            164.24,-74.62, 
-            s=20,
-            marker="^",
-            color="k",
-            zorder=3,
-            transform=cartopy.crs.PlateCarree(),
-            lw=0.8,
-            alpha=0.8,
-        )
-        from read_digisonde import get_hv_by_date
-        hv = get_hv_by_date(date)
-        print("Digisonde HV:", hv)
-        q = ax.quiver(
-            np.array([[164.24]]), 
-            np.array([[-74.62]]),
-            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]), 
-            transform=cartopy.crs.PlateCarree(),
-            headwidth=2, headlength=2, scale=1500, color="m", 
-            zorder=3
-        )
-        if j==0:
-            qk = ax.quiverkey(
-                q,
-                X=0.2,
-                Y=0.2,
-                U=300,
-                # angle=90,
-                label="300 m/s",
-                labelpos="S",
-                coordinates="axes",
-                labelsep=0.05
-            )
-            qk.text.set_fontsize("x-small")
-            # qk.text.set_rotation(90)
         txt = fr"$\phi_0$={np.round(np.max(pot)-np.min(pot),1)} kV" + "\n"
         txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
         txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
-        txt = txt + (r"$Vz_{jb}$=%.1f m/s"%(hv['VZF']))
         ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
         ax.text(0.05, 0.95, txt, ha="left", va="top", transform=ax.transAxes, fontdict={"size": 6, "color": "k"})
         ax.overlay_eclipse(j==len(dates)-1)
@@ -787,43 +786,6 @@ def create_map_plots(
             dmspdata_south_boundary["MODEL_SOUTH_POLAR_GEOGRAPHIC_LATITUDE"]
         )
         ax.plot(XYZ[:, 0], XYZ[:, 1], ls="--", color="m", lw=0.5)
-        ax.scatter(
-            164.24,-74.62, 
-            s=20,
-            marker="^",
-            color="k",
-            zorder=2,
-            transform=cartopy.crs.PlateCarree(),
-            lw=0.8,
-            alpha=0.8,
-        )
-        from read_digisonde import get_hv_by_date
-        hv = get_hv_by_date(date)
-        print("Digisonde HV:", hv)
-        q = ax.quiver(
-            np.array([[164.24]]), 
-            np.array([[-74.62]]),
-            np.array([[hv["VXF"]]]), np.array([[hv["VYF"]]]), 
-            transform=cartopy.crs.PlateCarree(),
-            headwidth=2, headlength=2, scale=1500, color="m", 
-            zorder=3
-        )
-        if j==0:
-            qk = ax.quiverkey(
-                q,
-                X=1.05,
-                Y=0.8,
-                U=500,
-                angle=90,
-                label="500 m/s",
-                labelpos="E",
-                coordinates="axes",
-                labelsep=0.05
-            )
-            # Shrink and rotate the quiver key label for compact layout
-            qk.text.set_fontsize("x-small")
-            qk.text.set_rotation(90)
-
         # data, lats, lons = get_sd_data(date)
         # XYZ = fan.proj.transform_points(
         #     fan.geo, 
@@ -842,7 +804,6 @@ def create_map_plots(
         txt = txt + fr"$\theta$={np.round(imfs['IMF.tilt, deg'].iloc[0],1)}$^\circ$"+ "\n"
         txt = txt + fr"$|B|$={np.round(imfs['IMF.B, nT'].iloc[0],1)} nT"+ "\n"
         # txt = txt + fr"n={np.round(imfs['nvecs'].iloc[0],1)}"+ "\n"
-        txt = txt + (r"$Vz_{jb}$=%.1f m/s"%(hv['VZF']))
         ax.text(0.05, 1.05, f"({chr(ord('A')+j)}) {date.strftime('%H:%M UT')}", ha="left", va="top", transform=ax.transAxes, fontdict={"size": "xx-small", "weight": "bold", "color": "k"})
         ax.text(0.05, 0.95, txt, ha="left", va="top", transform=ax.transAxes, fontdict={"size": 6, "color": "k"})
         # if j==7:
