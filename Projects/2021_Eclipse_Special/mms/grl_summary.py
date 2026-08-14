@@ -33,6 +33,24 @@ COLOR_AE = "#c44536"
 COLOR_AL = "#457b9d"
 COLOR_MMS_V = "#2a9d8f"
 COLOR_MMS_EXB = "#f4a261"
+PANEL_FONT_SIZE = 12
+PANEL_LETTER_SIZE = 14
+PANEL_ANNOTATION_SIZE = 12
+
+
+def _style_axis(ax, *, facecolor: str | None = None) -> None:
+    if facecolor is not None:
+        ax.set_facecolor(facecolor)
+    ax.tick_params(
+        axis="both",
+        which="both",
+        direction="in",
+        top=True,
+        right=True,
+        labelsize=PANEL_FONT_SIZE,
+    )
+    # ax.grid(alpha=0.2, lw=0.5)
+    ax.set_axisbelow(True)
 
 
 def _as_datetime(value: dt.datetime | str) -> dt.datetime:
@@ -89,13 +107,12 @@ def _panel_letter(ax, letter: str) -> None:
     ax.text(
         0.01,
         0.95,
-        letter,
+        f"({letter})",
         transform=ax.transAxes,
-        fontsize=10,
-        fontweight="bold",
+        fontsize=PANEL_LETTER_SIZE,
+        color="black",
         va="top",
         ha="left",
-        bbox=dict(boxstyle="round,pad=0.15", facecolor="white", edgecolor="none", alpha=0.8),
     )
 
 
@@ -155,9 +172,10 @@ def _plot_location_schematic(
     plane: str = "xy",
 ) -> None:
     ax.set_aspect("equal")
-    ax.set_facecolor("#f7f3ec")
-    ax.axhline(0, color="0.8", lw=0.8, zorder=0)
-    ax.axvline(0, color="0.8", lw=0.8, zorder=0)
+    ax.set_facecolor("#faf7ef")
+    ax.axhline(0, color="0.78", lw=1.0, zorder=0)
+    ax.axvline(0, color="0.78", lw=1.0, zorder=0)
+    _style_axis(ax, facecolor="w")
 
     extent = GEO_RADIUS_RE * 1.45
     tracks = {}
@@ -171,7 +189,7 @@ def _plot_location_schematic(
     earth = Circle((0, 0), radius=1.0, facecolor=COLOR_EARTH, edgecolor="black", lw=1.0, zorder=2)
     ax.add_patch(earth)
     if plane != "yz":
-        ax.text(0, 0, "Earth", color="r", ha="center", va="center", fontsize=8, zorder=3)
+        ax.text(0, 0, "Earth", color="r", ha="center", va="center", fontsize=PANEL_ANNOTATION_SIZE, zorder=3)
 
     geo_ring = Circle((0, 0), radius=GEO_RADIUS_RE, facecolor="none", edgecolor="0.65", lw=0.9, ls="--", zorder=1)
     ax.add_patch(geo_ring)
@@ -185,18 +203,18 @@ def _plot_location_schematic(
             arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
             ha="center",
             va="center",
-            fontsize=8,
+            fontsize=PANEL_ANNOTATION_SIZE,
         )
-        ax.text(extent * 0.77, 1.0, "Sunward", ha="center", va="bottom", fontsize=8)
-        ax.text(-extent * 0.77, 1.0, "Anti-sunward", ha="center", va="bottom", fontsize=8)
-        ax.text(0.92, 0.95, "X-Z view", transform=ax.transAxes, fontsize=8, weight="bold", ha="left", va="top")
+        ax.text(extent * 0.77, 1.0, "Sunward", ha="center", va="bottom", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.text(-extent * 0.77, 1.0, "Anti-sunward", ha="center", va="bottom", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.text(0.92, 0.95, "X-Z view", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE, weight="bold", ha="left", va="top")
     elif plane == "yz":
         # ax.text(extent * 0.77, 1.0, "Duskward", ha="center", va="bottom", fontsize=8)
-        ax.text(-extent * 0.77, 1.0, "Dawnward", ha="center", va="bottom", fontsize=8)
+        ax.text(-extent * 0.77, 1.0, "Dawnward", ha="center", va="bottom", fontsize=PANEL_ANNOTATION_SIZE)
         # ax.text(1.0, extent * 0.77, "Northward", ha="right", va="center", fontsize=8)
-        ax.text(1.0, -extent * 0.77, "Southward", ha="right", va="center", fontsize=8)
-        ax.text(0.8, 0.95, "Sun out of plane", transform=ax.transAxes, fontsize=8, weight="bold", ha="right", va="top")
-        ax.text(1.01, 0.95, "Y-Z view", transform=ax.transAxes, fontsize=8, weight="bold", ha="left", va="top", rotation=90)
+        ax.text(1.0, -extent * 0.77, "Southward", ha="right", va="center", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.text(1, 0.95, "Sun out of plane", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE, weight="bold", ha="right", va="top")
+        ax.text(1.01, 0.95, "Y-Z view", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE, weight="bold", ha="left", va="top", rotation=90)
     else:
         ax.annotate(
             "Sun",
@@ -205,11 +223,11 @@ def _plot_location_schematic(
             arrowprops=dict(arrowstyle="->", lw=1.5, color="black"),
             ha="center",
             va="center",
-            fontsize=8,
+            fontsize=PANEL_ANNOTATION_SIZE,
         )
         # ax.text(extent * 0.77, 1.0, "Dayside", ha="center", va="bottom", fontsize=8)
-        ax.text(-extent * 0.77, 1.0, "Nightside", ha="center", va="bottom", fontsize=8)
-        ax.text(1.01, 0.95, "X-Y view", transform=ax.transAxes, fontsize=8, weight="bold", ha="left", va="top", rotation=90)
+        ax.text(-extent * 0.77, 1.0, "Nightside", ha="center", va="bottom", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.text(1.01, 0.95, "X-Y view", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE, weight="bold", ha="left", va="top", rotation=90)
 
     for probe_name, (x, y, x_toi, y_toi, r_re, mlt) in tracks.items():
         color = PROBE_COLORS.get(probe_name, "C0")
@@ -223,7 +241,7 @@ def _plot_location_schematic(
                 x_toi + 0.32,
                 y_toi + 0.32,
                 f"{label}\nR={r_re:.1f} Re\nMLT={mlt:.1f}",
-                fontsize=7,
+                fontsize=PANEL_ANNOTATION_SIZE - 2,
                 color=color,
                 ha="left",
                 va="bottom",
@@ -241,7 +259,7 @@ def _plot_location_schematic(
             gx + 0.4,
             gy - 0.35,
             f"GOES-{probe}",
-            fontsize=8,
+            fontsize=PANEL_ANNOTATION_SIZE,
             color=COLOR_GOES,
             ha="left",
             va="top",
@@ -251,18 +269,18 @@ def _plot_location_schematic(
     ax.set_xlim(-extent, extent)
     ax.set_ylim(-extent, extent)
     if plane == "yz":
-        ax.set_xlabel("GSM Y [Re]")
-        ax.set_ylabel("GSM Z [Re]")
+        ax.set_xlabel("GSM Y [Re]", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.set_ylabel("GSM Z [Re]", fontsize=PANEL_ANNOTATION_SIZE)
     elif plane == "xz":
-        ax.set_xlabel("GSM X [Re]")
-        ax.set_ylabel("GSM Z [Re]")
+        ax.set_xlabel("GSM X [Re]", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.set_ylabel("GSM Z [Re]", fontsize=PANEL_ANNOTATION_SIZE)
     else:
-        ax.set_xlabel("GSM X [Re]")
-        ax.set_ylabel("GSM Y [Re]")
+        ax.set_xlabel("GSM X [Re]", fontsize=PANEL_ANNOTATION_SIZE)
+        ax.set_ylabel("GSM Y [Re]", fontsize=PANEL_ANNOTATION_SIZE)
     # ax.set_title(f"Spacecraft locations at {toi:%H:%M UT}", fontsize=10)
     if plane != "yz":
         ax.text(0.02, 0.02, "Not to scale", transform=ax.transAxes, fontsize=8, weight="bold", ha="left", va="bottom")
-    ax.grid(alpha=0.12, lw=0.5)
+    # No grid for the consolidated GRL figure.
 
 
 def _plot_goes_panel(
@@ -277,8 +295,9 @@ def _plot_goes_panel(
     series = goes_sat.series.get("mag_h") or goes_sat.series.get("mag_total")
     if series is not None:
         ax.plot(series.times, np.asarray(series.values, dtype=float), color=COLOR_GOES, lw=1.15)
-    ax.set_ylabel(f"{goes_sat.satellite} H [nT]", color=COLOR_GOES)
-    ax.grid(alpha=0.2, lw=0.5)
+    ax.set_ylabel(f"{goes_sat.satellite} H [nT]", color=COLOR_GOES, fontsize=PANEL_FONT_SIZE)
+    ax.set_ylim(50, 90)
+    _style_axis(ax, facecolor="white")
 
     if isinstance(eclipse_obscuration, dict):
         occ_t = np.asarray(eclipse_obscuration["times"], dtype=object)
@@ -293,17 +312,19 @@ def _plot_goes_panel(
         ax_r.plot(ae.times, np.asarray(ae.values, dtype=float), color=COLOR_AE, lw=1.35, label="AE")
     if al is not None:
         ax_r.plot(al.times, np.asarray(al.values, dtype=float), color=COLOR_AL, lw=1.35, ls="--", label="AL")
-    ax_r.set_ylabel("AE / AL [nT]")
-    ax_r.tick_params(axis="y")
-    ax_r.legend(fontsize=7, frameon=False, loc="upper right")
+    ax_r.set_ylabel("AE / AL [nT]", fontsize=PANEL_FONT_SIZE)
+    ax_r.tick_params(axis="y", labelsize=10)
+    ax_r.set_ylim(400, -400)
+    ax_r.legend(fontsize=10, frameon=False, loc="upper right")
 
     ax_r2.spines["right"].set_position(("axes", 1.11))
     ax_r2.spines["right"].set_visible(True)
     ax_r2.patch.set_visible(False)
     ax_r2.plot(occ_t, occ_n, color=COLOR_ECLIPSE, lw=1.0)
     ax_r2.set_ylim(0, 1.02)
-    ax_r2.set_ylabel("Eclipse\n(norm.)", color=COLOR_ECLIPSE)
+    ax_r2.set_ylabel("Eclipse\n(norm.)", color=COLOR_ECLIPSE, fontsize=PANEL_FONT_SIZE)
     ax_r2.tick_params(axis="y", colors=COLOR_ECLIPSE)
+    ax_r2.tick_params(axis="y", which="both", direction="in", labelsize=PANEL_FONT_SIZE)
 
     # ax.text(0.985, 0.1, "GOES H + eclipse", transform=ax.transAxes, fontsize=8, ha="right", va="bottom")
 
@@ -349,8 +370,8 @@ def _plot_omni_panel(
             linewidths=0,
             label="Bz GSM",
         )
-    ax.set_ylabel("IMF [nT]")
-    ax.grid(alpha=0.2, lw=0.5)
+    ax.set_ylabel("IMF [nT]", fontsize=PANEL_FONT_SIZE)
+    # No grid for the consolidated GRL figure.
     ax.set_ylim(-10, 10)
 
     if pdyn is not None:
@@ -362,11 +383,13 @@ def _plot_omni_panel(
             marker="^",
             linewidths=0,
         )
-    ax_r.set_ylabel("Pdyn [nPa]", color=COLOR_PDY)
+    ax_r.set_ylabel("Pdyn [nPa]", color=COLOR_PDY, fontsize=PANEL_FONT_SIZE)
     ax_r.tick_params(axis="y", colors=COLOR_PDY)
+    ax_r.tick_params(axis="y", which="both", direction="in", labelsize=PANEL_FONT_SIZE)
     ax_r.set_ylim(0, 10)
 
-    ax.legend(ncol=3, fontsize=7, frameon=False, loc="upper right")
+    ax.legend(ncol=3, fontsize=10, frameon=False, loc="upper right")
+    _style_axis(ax, facecolor="white")
     # ax.text(0.985, 0.1, "IMF + Pdyn", transform=ax.transAxes, fontsize=8, ha="right", va="bottom")
 
 
@@ -380,8 +403,8 @@ def _plot_ae_panel(
         ax.plot(ae.times, np.asarray(ae.values, dtype=float), color=COLOR_AE, lw=1.1)
     ax.set_ylabel("AE [nT]", color=COLOR_AE)
     ax.tick_params(axis="y", colors=COLOR_AE)
-    ax.grid(alpha=0.2, lw=0.5)
-    ax.text(0.985, 0.1, "AE", transform=ax.transAxes, fontsize=8, ha="right", va="bottom")
+    _style_axis(ax, facecolor="white")
+    ax.text(0.985, 0.1, "AE", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE, ha="right", va="bottom")
 
 
 def _plot_mms_velocity_panel(
@@ -420,12 +443,13 @@ def _plot_mms_velocity_panel(
                 label="|ExB| smoothed",
             )
 
-    ax.set_ylabel("MMS1 |V| [km/s]", color=COLOR_MMS_V)
-    ax_r.set_ylabel("MMS1 |ExB| [km/s]", color=COLOR_MMS_EXB)
+    ax.set_ylabel("MMS1 |V| [km/s]", color=COLOR_MMS_V, fontsize=PANEL_FONT_SIZE)
+    ax_r.set_ylabel("MMS1 |ExB| [km/s]", color=COLOR_MMS_EXB, fontsize=PANEL_FONT_SIZE)
     ax.tick_params(axis="y", colors=COLOR_MMS_V)
     ax_r.tick_params(axis="y", colors=COLOR_MMS_EXB)
-    ax.grid(alpha=0.2, lw=0.5)
-    ax.text(0.985, 0.1, "black dashed: smoothed", transform=ax.transAxes, fontsize=7, ha="right", va="bottom")
+    ax_r.tick_params(axis="y", which="both", direction="in", labelsize=PANEL_FONT_SIZE)
+    _style_axis(ax, facecolor="white")
+    ax.text(0.985, 0.1, "black dashed: smoothed", transform=ax.transAxes, fontsize=PANEL_ANNOTATION_SIZE - 4, ha="right", va="bottom")
     # ax.text(0.985, 0.87, "MMS1 velocity", transform=ax.transAxes, fontsize=8, ha="right", va="top")
 
 
@@ -456,7 +480,7 @@ def plot_grl_summary_figure(
     goes_sat = next(iter(goes_data.values()))
     omni_sat = next(iter(omni_data.values()))
 
-    fig = plt.figure(figsize=(8, 10.6), dpi=300, facecolor="white")
+    fig = plt.figure(figsize=(8.2, 10.8), dpi=300, facecolor="#fbfbfb")
     gs = GridSpec(
         4,
         2,
@@ -464,7 +488,7 @@ def plot_grl_summary_figure(
         width_ratios=[1.0, 1.0],
         height_ratios=[1.08, 1.0, 1.0, 1.0],
         wspace=0.18,
-        hspace=0.16,
+        hspace=0.3,
     )
 
     ax_map_xy = fig.add_subplot(gs[0, 0])
@@ -489,6 +513,7 @@ def plot_grl_summary_figure(
         ax.set_xlim(start, end)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax.tick_params(axis="x", labelbottom=False)
+        ax.tick_params(axis="x", which="both", direction="in", labelsize=PANEL_FONT_SIZE)
     ax_mms_v.tick_params(axis="x", labelbottom=True)
     ax_mms_v.set_xlabel("UT")
 

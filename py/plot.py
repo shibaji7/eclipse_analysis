@@ -231,7 +231,7 @@ class RangeTimePlot(object):
         return ax
 
     def save(self, filepath):
-        self.fig.savefig(filepath, bbox_inches="tight", dpi=1000)
+        self.fig.savefig(filepath, bbox_inches="tight", dpi=300, facecolor="white")
 
     def close(self):
         self.fig.clf()

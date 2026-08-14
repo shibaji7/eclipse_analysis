@@ -1318,18 +1318,21 @@ def create_rti_plots(
     rad_beams_ch_freq, dates, beam=15, yscale="srange", 
     range=[0, 4500]
 ):
+    from publication_style import apply_publication_style
+
+    apply_publication_style(font_size=8)
     date = dates[1].strftime("%d %b, %Y") if dates[0].day == dates[1].day else dates[0].strftime("%d-") + dates[1].strftime("%d %b, %Y")
     rti = RangeTimePlot(
         range, 
         dates, 
         date, 
         len(rad_beams_ch_freq),
-        font="sans-sarif",
+        font="serif",
     )
     for j, rad_beam in enumerate(rad_beams_ch_freq):
         rad, beam, channel, tfreq = rad_beam[0], rad_beam[1], rad_beam[2], rad_beam[3]
-        tx = tfreq if channel == 2 else tfreq + 0.2 
-        title = fr"({chr(97+j)}) Rad: {rad} / Beam: {beam} / ch: {channel} / $f_0$: {tfreq} MHz"
+        tx = tfreq + 0.2 if channel == 2 and tfreq==12.0 else tfreq 
+        title = fr"({chr(65+j)}) Rad: {rad} / Beam: {beam} / ch: {channel} / $f_0$: {tx} MHz"
         radar = Radar(rad, dates, type="fitacf")
         radar.calculate_ground_range()
         df = radar.df.copy()

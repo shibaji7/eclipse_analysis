@@ -64,7 +64,7 @@ def main() -> int:
     outdir.mkdir(parents=True, exist_ok=True)
 
     build_grl_summary_figure(
-        probes=[1, 2, 3, 4],
+        probes=[1],
         time_range=(args.start, args.end),
         time_of_interest=args.toi,
         output_dir=outdir,

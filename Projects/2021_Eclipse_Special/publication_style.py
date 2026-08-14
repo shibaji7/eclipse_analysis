@@ -5,8 +5,13 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 
 
-def apply_publication_style(font_size: int = 8) -> None:
+def apply_publication_style(font_size: int = 15) -> None:
     """Apply a compact SciencePlots-style publication theme."""
+
+    import matplotlib.pyplot as plt
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans",
+                                   "Lucida Grande", "Verdana"]
 
     import scienceplots  # noqa: F401
 
@@ -18,9 +23,7 @@ def apply_publication_style(font_size: int = 8) -> None:
             "savefig.dpi": 600,
             "figure.dpi": 300,
             "text.usetex": False,
-            "mathtext.fontset": "dejavuserif",
-            "font.family": "DejaVu Serif",
-            "font.serif": ["DejaVu Serif"],
+            
             "font.size": font_size,
             "axes.labelsize": font_size,
             "axes.titlesize": font_size + 1,
